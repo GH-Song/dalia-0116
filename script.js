@@ -223,7 +223,8 @@
           rate: 0.10 + Math.random() * 0.20,
           spin: (Math.random() - 0.5) * 0.6,             /* 초당 회전 rad */
           rot: Math.random() * Math.PI * 2,
-          alpha: 0.45 + Math.random() * 0.5
+          /* 글자 위를 지나가므로 진하면 읽기를 방해합니다 (설계 문서 §7 '아주 옅게') */
+          alpha: 0.30 + Math.random() * 0.42
         });
       }
     }
