@@ -42,17 +42,21 @@ python3 tools/subset-fonts.py && python3 tools/make-og.py && python3 -m http.ser
 - **신랑신부 연락처 노출 여부** — 현재 웨딩홀 대표번호만 `tel:` 링크
 - **RSVP 마감일 표기 여부**
 
+### 완료됨
+
+- **RSVP 백엔드** — Google Apps Script + 시트 연결 완료(2026-08-18). 실기기·브라우저에서
+  제출 → 시트 기록까지 검증했습니다. 엔드포인트는 Actions Secret `RSVP_ENDPOINT`.
+  스크립트 원본은 `tools/rsvp-apps-script.gs` (저장소 버전은 SHEET_ID 를 비워둡니다 — 공개 레포).
+  코드를 고치면 Apps Script 에서 **배포 관리**로 기존 배포를 수정해야 URL 이 유지됩니다.
+
 ### 기능 미완
 
-1. **RSVP 백엔드** — 폼·검증·인원 계산·실패 폴백까지 다 됐지만 `script.js` 의
-   `RSVP_ENDPOINT` 가 비어 있어 지금은 "미리보기라 저장되지 않습니다"를 띄웁니다.
-   Google Apps Script 웹앱을 만들어 URL 을 넣으면 바로 붙습니다. 시트 스키마는 설계 문서 §6
-2. **계좌 Secrets** — 레포 Settings > Secrets 에 `ACCT_GROOM` / `ACCT_GROOM_HOST` /
+1. **계좌 Secrets** — 레포 Settings > Secrets 에 `ACCT_GROOM` / `ACCT_GROOM_HOST` /
    `ACCT_BRIDE` / `ACCT_BRIDE_HOST` 를 넣으면 다음 배포부터 실제 값이 들어갑니다.
    넣기 전까지는 더미가 나옵니다. **채팅에 계좌번호를 붙여넣지 마세요**
-3. **사진** — 갤러리 5칸과 히어로가 자리표시자입니다. 2026-10 촬영본으로 교체.
+2. **사진** — 갤러리 5칸과 히어로가 자리표시자입니다. 2026-10 촬영본으로 교체.
    `assets/img/gallery-{1..5}.svg` 를 같은 4:5 비율 이미지로 갈아끼우면 됩니다
-4. **테마 최종 결정** — 사진 수령 후 온실/설야 중 선택. `theme.css` 교체만 하면 됩니다.
+3. **테마 최종 결정** — 사진 수령 후 온실/설야 중 선택. `theme.css` 교체만 하면 됩니다.
    대비 실측표가 파일 상단 주석에 있으니 교체 시 다시 재세요
 
 ### QA 미실시
@@ -70,6 +74,9 @@ python3 tools/subset-fonts.py && python3 tools/make-og.py && python3 -m http.ser
 - **달력은 정적 HTML 입니다.** JS 가 죽어도 하객이 날짜를 봐야 하기 때문입니다. D-day 만 JS
 - **지도 딥링크는 검색 스킴**(`nmap://search?query=`). 좌표·장소ID 를 안 씁니다 (API 키 0개 원칙).
   더 정확하게 하려면 나중에 장소ID 를 넣을 수 있습니다
+- **Apps Script 는 POST 를 처리한 뒤 googleusercontent.com 으로 302 리다이렉트합니다.**
+  curl 로는 그 페이지를 못 읽어 실패처럼 보이지만 쓰기는 이미 끝난 상태입니다.
+  브라우저는 정상 처리하므로, 검증은 반드시 브라우저나 행 수(`/exec` GET)로 하세요
 - **식사 인원 + 답례품 인원 = 총 참석 인원.** 식사는 안 하고 답례품만 받고 가시는 하객이 있어서입니다
 - **Cormorant 는 라이닝 숫자를 강제**해야 합니다. 기본 올드스타일이라 `01` 이 `OI` 로 읽힙니다
 - **나눔명조에 U+2212(−) 가 없습니다.** 폰트 의존 기호 대신 SVG 아이콘을 쓰세요. 글리프 게이트가 잡아줍니다

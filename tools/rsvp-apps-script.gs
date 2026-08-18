@@ -6,12 +6,35 @@
  * 설치 방법은 이 파일 맨 아래 주석을 보세요.
  */
 
+/**
+ * ★ 여기에 스프레드시트 ID 를 넣으세요.
+ *
+ * 시트 주소가 이렇게 생겼습니다:
+ *   https://docs.google.com/spreadsheets/d/1AbCdEf...XyZ/edit#gid=0
+ *                                          └─────┬─────┘
+ *                                            이 부분이 ID
+ *
+ * 스크립트를 시트 안에서(확장 프로그램 > Apps Script) 만들었다면 비워둬도
+ * 동작하지만, 넣어두면 어느 쪽이든 확실합니다.
+ */
+var SHEET_ID = '';
+
 var SHEET_NAME = 'rsvp';
 var HEADERS = ['timestamp', 'side', 'name', 'attending', 'meal_count', 'gift_count', 'message'];
 
 /** 시트를 찾고, 없으면 머리글과 함께 만듭니다. */
 function getSheet_() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = SHEET_ID
+    ? SpreadsheetApp.openById(SHEET_ID)
+    : SpreadsheetApp.getActiveSpreadsheet();
+
+  if (!ss) {
+    throw new Error(
+      '스프레드시트를 찾을 수 없습니다. 이 스크립트가 시트에 붙어 있지 않습니다. ' +
+      '파일 맨 위 SHEET_ID 에 시트 주소의 /d/ 와 /edit 사이 문자열을 넣어 주세요.'
+    );
+  }
+
   var sheet = ss.getSheetByName(SHEET_NAME);
   if (!sheet) {
     sheet = ss.insertSheet(SHEET_NAME);
@@ -86,9 +109,13 @@ function doGet() {
 /**
  * ── 설치 방법 ─────────────────────────────────────────────
  *
- * 1. sheets.new 로 새 스프레드시트를 만듭니다. 이름은 아무거나 (예: 청첩장 참석여부)
+ * 1. 스프레드시트를 하나 만들고 엽니다. 이름은 아무거나 (예: 청첩장 참석여부)
  *
- * 2. 상단 메뉴 [확장 프로그램] > [Apps Script] 를 엽니다.
+ * 2. 시트를 연 상태에서 상단 메뉴 [확장 프로그램] > [Apps Script] 를 엽니다.
+ *    (파일 목록 화면에는 이 메뉴가 없습니다. 시트를 열어야 나옵니다.)
+ *
+ * 2-1. 주소창에서 시트 ID 를 복사해 이 파일 맨 위 SHEET_ID 에 넣습니다.
+ *      /d/ 와 /edit 사이의 긴 문자열입니다.
  *
  * 3. 편집기에 있던 내용을 전부 지우고 이 파일 내용을 붙여넣습니다.
  *    (맨 아래 이 주석까지 통째로 붙여도 됩니다.)
