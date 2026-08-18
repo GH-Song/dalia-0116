@@ -23,7 +23,16 @@ import math
 import random
 import sys
 
-R1 = lambda v: round(v, 1)
+_prec = 1                                  # v2.2 신규 자산은 0(정수) — 용량 절감
+
+
+def R1(v):
+    """좌표 반올림. _prec=0 이면 정수 — 122px 렌더에서 ±0.4px 차이라
+    안 보이지만 path 데이터가 ~25% 줄어듭니다 (용량 게이트 대응)."""
+    r = round(v, _prec)
+    return int(r) if _prec == 0 else r
+
+
 rnd = random.Random(20270116)              # 예식일 = 시드
 
 
@@ -61,16 +70,23 @@ def petal(cx, cy, deg, r0, length, width):
             f'C{R1(c3[0])} {R1(c3[1])} {R1(c4[0])} {R1(c4[1])} {R1(bx)} {R1(by)}Z')
 
 
-def camellia(cx, cy, radius, face_deg=0.0):
+def camellia(cx, cy, radius, face_deg=0.0, slim=False):
     """겹동백 — 꽃잎 고리 3겹. 바깥일수록 옅게, 안쪽일수록 진하게.
 
     반투명 겹침이 수채의 농담을 만드는 핵심입니다 (설계 문서 §AD-3 v2).
+    slim=True 는 반지름이 작은 꽃용 2겹 — 좁은 자리에서 꽃잎이 뭉개지지
+    않고 path 데이터도 40% 가볍습니다 (v2.2).
     """
     rings = [
         (8, 0.24, 0.74, 0.54, 0.30),   # (장수, 밑동 오프셋, 길이, 폭, 불투명도)
         (6, 0.16, 0.56, 0.46, 0.44),
         (5, 0.08, 0.38, 0.32, 0.58),
     ]
+    if slim:
+        rings = [
+            (6, 0.20, 0.72, 0.56, 0.34),
+            (4, 0.10, 0.46, 0.40, 0.54),
+        ]
     # 꽃잎 폭 > 꽃잎 간격이어야 서로 겹칩니다. 겹치지 않으면 데이지처럼 보입니다.
     paths = []
     for k, (n, r0f, lf, wf, op) in enumerate(rings):
@@ -313,7 +329,70 @@ def sprig():
                + grp('flora-bloom-soft', soft))
 
 
-ASSETS = {"garland": garland, "corner": corner, "divider": divider, "sprig": sprig}
+def corner_full():
+    """후반 섹션 코너(마음 전하실 곳·공유) — 개화 서사의 크레셴도 (§AD-3 v2.2).
+
+    corner 의 봉오리 자리에 만개 한 송이를 더 얹고 안개꽃·낙화 꽃잎을
+    늘립니다. 전반 코너보다 덜 화려하면 안 됩니다 — 서사의 방향은
+    '점점 더 핀다'이지 '앞을 아낀다'가 아닙니다.
+
+    독립 시드 — 기존 4종 자산의 난수 스트림을 건드리지 않습니다.
+    (현재 HTML 의 corner·divider·sprig 인라인은 과거 스트림 산출물이라
+    전량 재실행과 일치하지 않습니다. 기존 자산을 다시 뽑아 붙이지 마세요.)
+    """
+    global rnd, _prec
+    rnd = random.Random(20270116 + 22)
+    _prec = 0
+    leaves = "".join([
+        spray(30, 26, 12, 86, 16, 5, 14),
+        spray(26, 30, 78, 84, -14, 5, 13),
+        spray(40, 40, 44, 54, 10, 3, 11),
+    ])
+    stems = gypso(46, 50, 30, 30, 4) + gypso(80, 42, 6, 24, 3)
+    petals = falling_petals([(98, 82), (78, 106)])
+    soft = camellia(64, 26, 15, 20, slim=True) + camellia(29, 76, 14, 112, slim=True) + petals
+    main = camellia(30, 32, 22, 55)
+    stam = stamens(30, 32, 22) + stamens(64, 26, 15) + stamens(29, 76, 14)
+    berr = berries(56, 62, 58, 14, 3)
+    _prec = 1
+    return svg("flora-corner", "0 0 150 150",
+               grp('flora-leaf', leaves)
+               + grp('flora-stem', stems)
+               + grp('flora-stamen', berr)
+               + grp('flora-bloom-soft', soft)
+               + grp('flora-bloom', main)
+               + grp('flora-stamen', stam))
+
+
+def bloom_sprig():
+    """푸터 — 만개 동백이 중심에 오는 가지 (§AD-3 v2.2).
+
+    sprig(봉오리 하나)를 대체합니다. 페이지 서사의 도착점:
+    '기다리던 봄이 왔습니다'. 곁의 봉오리가 히어로의 기다림과 호응합니다.
+    독립 시드 — corner_full 과 같은 이유.
+    """
+    global rnd, _prec
+    rnd = random.Random(20270116 + 44)
+    _prec = 0
+    leaves = spray(62, 42, -12, 64, 8, 4, 12) + spray(138, 38, 188, 60, -8, 4, 11)
+    stems = gypso(72, 30, -104, 20, 4) + gypso(130, 28, -66, 20, 3)
+    soft = (bud(64, 30, 12, -96) + camellia(136, 30, 11, 30, slim=True)
+            + falling_petals([(44, 50), (160, 48)]))
+    main = camellia(100, 30, 19, -90)
+    stam = stamens(100, 30, 19) + stamens(136, 30, 11)
+    berr = berries(84, 44, -150, 12, 3)
+    _prec = 1
+    return svg("flora-sprig", "0 0 200 64",
+               grp('flora-leaf', leaves)
+               + grp('flora-stem', stems)
+               + grp('flora-stamen', berr)
+               + grp('flora-bloom-soft', soft)
+               + grp('flora-bloom', main)
+               + grp('flora-stamen', stam))
+
+
+ASSETS = {"garland": garland, "corner": corner, "divider": divider, "sprig": sprig,
+          "corner_full": corner_full, "bloom_sprig": bloom_sprig}
 
 
 def main() -> int:

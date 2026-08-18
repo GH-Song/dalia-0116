@@ -17,13 +17,13 @@ SRC = ROOT / "assets" / "fonts" / "src"
 OUT = ROOT / "assets" / "img" / "og.png"
 
 W, H = 1200, 630
-BG    = (253, 248, 240)   # --color-bg
-TEXT  = (61, 46, 39)      # --color-text
-CORAL = (186, 117, 97)    # --color-primary
-ROSE  = (138, 75, 61)     # --color-accent
+BG    = (252, 251, 249)   # --color-bg
+TEXT  = (62, 46, 44)      # --color-text
+CORAL = (189, 113, 107)   # --color-primary
+ROSE  = (150, 82, 78)     # --color-accent
 GOLD  = (168, 131, 75)    # --color-gold
-MUTED = (117, 101, 90)    # --color-muted-strong
-BLUSH = (238, 211, 195)   # --color-secondary
+MUTED = (122, 104, 98)    # --color-muted-strong
+BLUSH = (244, 217, 210)   # --color-secondary
 
 
 def font(name, size):

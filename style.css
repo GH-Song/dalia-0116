@@ -416,8 +416,8 @@ option {
   padding: 0 var(--side-pad) var(--space-5);
   text-align: center;
   background: linear-gradient(to bottom,
-              var(--color-surface),
-              var(--color-bg) 34%);   /* 상단에 온기 한 겹 */
+              var(--color-dawn),
+              var(--color-bg) 42%);   /* 새벽 블러시 빛 — 봄을 기다리는 아침 (v2.2) */
 }
 
 .hero-flora {

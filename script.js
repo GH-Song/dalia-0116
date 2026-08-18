@@ -216,27 +216,53 @@
       };
     }
 
+    /* 입자 페이드 (설계 문서 §7 v2.3) — 눈·꽃잎 혼합은 모시는 글까지.
+       그 아래로는 꽃잎 몇 장만 은은하게. 기준선은 .greeting 하단. */
+    var fadeBase = 0;                        /* resize() 에서 잽니다 */
+    var KEEP = 4;                            /* 페이드 뒤 남는 꽃잎 수 */
+
+    function fadeProgress() {
+      if (!fadeBase) return 0;
+      var vh = window.innerHeight || 1;
+      var y = window.scrollY || document.documentElement.scrollTop || 0;
+      /* 모시는 글 하단이 화면 중턱을 지날 때 시작, 1.2 뷰포트에 걸쳐 완료 */
+      return Math.min(1, Math.max(0, (y - (fadeBase - vh * 0.6)) / (vh * 1.2)));
+    }
+
+    /* 지금 스크롤 위치에서 살아 있어도 되는 입자 수 */
+    function quota() {
+      var p = fadeProgress();
+      if (p <= 0) return bits.length;
+      return Math.max(KEEP, Math.round(bits.length - (bits.length - KEEP) * p));
+    }
+
+    function spawn(y) {
+      var p = fadeProgress();
+      /* 모시는 글 아래로 내려갈수록 눈이 그치고 꽃잎만 남습니다 */
+      var isFlake = Math.random() < 0.62 * (1 - p);
+      var big = Math.random() < 0.4;
+      var size = (isFlake ? (big ? 26 : 18) : (big ? 22 : 15)) * (0.7 + Math.random() * 0.5);
+      return {
+        sprite: isFlake ? sprites.flake[big ? 0 : 1] : sprites.petal[big ? 0 : 1],
+        size: size,
+        x: Math.random() * w,
+        y: y === undefined ? -size : y,
+        vy: (isFlake ? 7 : 11) + Math.random() * 12,   /* 초당 낙하 px */
+        sway: 10 + Math.random() * 22,
+        phase: Math.random() * Math.PI * 2,
+        rate: 0.10 + Math.random() * 0.20,
+        spin: (Math.random() - 0.5) * 0.6,             /* 초당 회전 rad */
+        rot: Math.random() * Math.PI * 2,
+        /* 글자 위를 지나가므로 진하면 읽기를 방해합니다 (설계 문서 §7 0.40~0.85,
+           페이드 구간에서는 최대 40% 감쇠 — '정말 은은하게') */
+        alpha: (0.40 + Math.random() * 0.45) * (1 - 0.4 * p)
+      };
+    }
+
     function seed(n) {
       bits = [];
-      for (var i = 0; i < n; i++) {
-        /* 눈꽃과 꽃잎을 섞습니다. 꽃잎이 조금 더 적어야 겨울로 읽힙니다. */
-        var isFlake = Math.random() < 0.62;
-        var big = Math.random() < 0.4;
-        bits.push({
-          sprite: isFlake ? sprites.flake[big ? 0 : 1] : sprites.petal[big ? 0 : 1],
-          size: (isFlake ? (big ? 26 : 18) : (big ? 22 : 15)) * (0.7 + Math.random() * 0.5),
-          x: Math.random() * w,
-          y: Math.random() * h,
-          vy: (isFlake ? 7 : 11) + Math.random() * 12,   /* 초당 낙하 px */
-          sway: 10 + Math.random() * 22,
-          phase: Math.random() * Math.PI * 2,
-          rate: 0.10 + Math.random() * 0.20,
-          spin: (Math.random() - 0.5) * 0.6,             /* 초당 회전 rad */
-          rot: Math.random() * Math.PI * 2,
-          /* 글자 위를 지나가므로 진하면 읽기를 방해합니다 (설계 문서 §7 0.40~0.85) */
-          alpha: 0.40 + Math.random() * 0.45
-        });
-      }
+      for (var i = 0; i < n; i++) bits.push(spawn(Math.random() * h));
+      for (var k = quota(); k < n; k++) bits[k].asleep = true;
     }
 
     function resize() {
@@ -253,6 +279,9 @@
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
       if (!sprites) bake();
+      /* 입자 페이드 기준선 — 모시는 글 하단 (설계 문서 §7 v2.3) */
+      var greeting = document.querySelector('.greeting');
+      fadeBase = greeting ? greeting.offsetTop + greeting.offsetHeight : 0;
       seed(Math.max(9, Math.min(26, Math.round((w * h) / 34000))));
       return true;
     }
@@ -263,15 +292,35 @@
 
       ctx.clearRect(0, 0, w, h);
 
+      var q = quota();
       for (var i = 0; i < bits.length; i++) {
         var b = bits[i];
+
+        /* 잠든 입자 — 쿼터가 회복되면(위로 스크롤) 다시 태어납니다 */
+        if (b.asleep) {
+          if (i < q) b = bits[i] = spawn();
+          else continue;
+        }
+
         b.y += b.vy * dt;
         b.phase += b.rate * dt * Math.PI * 2;
         b.rot += b.spin * dt;
 
+        /* 쿼터 초과 — 낙하는 느려서(초당 7~23px) 화면 밖까지 기다리면
+           1분씩 걸립니다. 2~3초에 걸쳐 옅어지다 잠드는 쪽이 '자연스럽게
+           사라지면서'에 맞습니다. */
+        if (i >= q) {
+          b.alpha -= dt * 0.3;
+          if (b.alpha <= 0.02) { b.asleep = true; continue; }
+        }
+
         if (b.y - b.size > h) {
-          b.y = -b.size;
-          b.x = Math.random() * w;
+          if (i < q) {
+            b = bits[i] = spawn();
+          } else {
+            b.asleep = true;
+            continue;
+          }
         }
 
         var x = b.x + Math.sin(b.phase) * b.sway;
