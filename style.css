@@ -112,6 +112,11 @@ body {
   overflow-x: hidden;
 }
 
+/* [hidden] 은 기본 display:none 이라 다른 display 선언에 집니다.
+   .btn(inline-flex) 처럼 display 를 가진 요소를 JS 로 숨길 때 조용히 실패하므로
+   전역에서 못을 박습니다. */
+[hidden] { display: none !important; }
+
 img, svg { display: block; max-width: 100%; }
 ul, ol { list-style: none; }
 button, input, select, textarea { font: inherit; color: inherit; }
@@ -608,7 +613,6 @@ body.is-locked { overflow: hidden; }
   color: var(--color-on-accent);
   padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
 }
-.lightbox[hidden] { display: none; }
 
 .lightbox-bar {
   display: flex;
@@ -936,4 +940,38 @@ body.is-locked { overflow: hidden; }
   font-size: var(--fs-base);
   letter-spacing: 0.16em;
   text-indent: 0.16em;
+}
+
+/* =============================================================
+   25. 홀 공식 약도
+   전체 지도(6653x5051)를 그대로 넣으면 375px 화면에서 글자가 5px 이 되어
+   읽을 수 없습니다. 예식장 주변만 잘라 보여주고 누르면 전체를 띄웁니다.
+   잘라내는 값은 원본 viewBox 기준으로 계산한 것입니다:
+     보이는 영역 x 887..4713 (폭 3826) · y 730..3252 (높이 2522)
+   ============================================================= */
+.venue-map { margin-top: var(--space-6); }
+
+.map-open {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: var(--hairline) solid var(--color-line);
+  -webkit-tap-highlight-color: transparent;
+}
+.map-open:active { border-color: var(--color-primary); }
+
+.map-frame {
+  position: relative;
+  display: block;
+  aspect-ratio: 3826 / 2522;
+  overflow: hidden;
+  background: var(--color-surface);
+}
+.map-frame img {
+  position: absolute;
+  width: 173.9%;      /* 6653 / 3826 */
+  max-width: none;
+  height: auto;
+  left: -23.2%;       /* -887 / 3826 */
+  top: -28.9%;        /* -730 / 5051 * (6653/3826) * (3826/2522) */
 }

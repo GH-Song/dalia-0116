@@ -241,19 +241,20 @@
   }
 
   /* ---------------------------------------------------------
-     6. 갤러리 — 가로 스와이프는 CSS scroll-snap 이 담당하고
-     JS 는 라이트박스만 맡습니다.
-     열기 / 좌우 이동 / 스와이프 / 두 번 탭 확대 / 닫기.
+     6. 라이트박스 (공용) — 갤러리와 약도가 함께 씁니다
+     열기 / 좌우 이동 / 스와이프 / 핀치 확대 / 두 번 탭 / 닫기
      --------------------------------------------------------- */
-  function initGallery() {
-    var track = $('[data-gallery]');
-    var box   = $('[data-lightbox]');
-    if (!track || !box) return;
+  var lightbox = null;
 
-    var srcs = $$('img', track).map(function (img) { return img.getAttribute('src'); });
-    var img  = $('[data-lightbox-img]', box);
-    var cnt  = $('[data-lightbox-count]', box);
-    var idx  = 0;
+  function initLightbox() {
+    var box = $('[data-lightbox]');
+    if (!box) return null;
+
+    var img   = $('[data-lightbox-img]', box);
+    var cnt   = $('[data-lightbox-count]', box);
+    var nav   = $('.lightbox-nav', box);
+    var items = [];
+    var idx = 0;
     var lastFocus = null;
     var zoom = 1, panX = 0, panY = 0;
 
@@ -264,19 +265,12 @@
     function resetZoom() { zoom = 1; panX = panY = 0; applyTransform(); }
 
     function show(i) {
-      idx = (i + srcs.length) % srcs.length;
-      img.setAttribute('src', srcs[idx]);
-      img.setAttribute('alt', '신랑 신부 사진 ' + (idx + 1));
-      cnt.textContent = (idx + 1) + ' / ' + srcs.length;
+      idx = (i + items.length) % items.length;
+      img.setAttribute('src', items[idx].src);
+      img.setAttribute('alt', items[idx].alt || '');
+      cnt.textContent = items.length > 1 ? (idx + 1) + ' / ' + items.length : '';
+      nav.hidden = items.length < 2;
       resetZoom();
-    }
-
-    function open(i) {
-      lastFocus = document.activeElement;
-      show(i);
-      box.hidden = false;
-      document.body.classList.add('is-locked');
-      $('[data-lightbox-close]', box).focus();
     }
 
     function close() {
@@ -284,12 +278,6 @@
       document.body.classList.remove('is-locked');
       if (lastFocus && lastFocus.focus) lastFocus.focus();
     }
-
-    $$('[data-gallery-open]', track).forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        open(parseInt(btn.getAttribute('data-gallery-open'), 10) || 0);
-      });
-    });
 
     $('[data-lightbox-close]', box).addEventListener('click', close);
     $('[data-lightbox-prev]', box).addEventListener('click', function () { show(idx - 1); });
@@ -302,8 +290,8 @@
     document.addEventListener('keydown', function (e) {
       if (box.hidden) return;
       if (e.key === 'Escape') close();
-      else if (e.key === 'ArrowLeft') show(idx - 1);
-      else if (e.key === 'ArrowRight') show(idx + 1);
+      else if (e.key === 'ArrowLeft' && items.length > 1) show(idx - 1);
+      else if (e.key === 'ArrowRight' && items.length > 1) show(idx + 1);
     });
 
     /* --- 터치: 스와이프 이동 · 핀치 확대 · 확대 중 끌기 --- */
@@ -328,7 +316,7 @@
     img.addEventListener('touchmove', function (e) {
       moved = true;
       if (e.touches.length === 2 && startDist > 0) {
-        zoom = Math.max(1, Math.min(4, startZoom * (dist(e.touches) / startDist)));
+        zoom = Math.max(1, Math.min(6, startZoom * (dist(e.touches) / startDist)));
         applyTransform();
         e.preventDefault();
       } else if (zoom > 1) {
@@ -340,7 +328,7 @@
     }, { passive: false });
 
     img.addEventListener('touchend', function (e) {
-      if (zoom <= 1 && moved && e.changedTouches.length) {
+      if (zoom <= 1 && moved && items.length > 1 && e.changedTouches.length) {
         var dx = e.changedTouches[0].clientX - sx;
         if (Math.abs(dx) > 45) show(idx + (dx < 0 ? 1 : -1));
       }
@@ -348,14 +336,45 @@
       startDist = 0;
     }, { passive: true });
 
-    /* 두 번 탭 — 핀치가 어려운 기기를 위한 대안 */
     var lastTap = 0;
     img.addEventListener('click', function () {
       var now = Date.now();
-      if (now - lastTap < 320) { zoom = zoom > 1 ? 1 : 2.2; panX = panY = 0; applyTransform(); }
+      if (now - lastTap < 320) { zoom = zoom > 1 ? 1 : 2.4; panX = panY = 0; applyTransform(); }
       lastTap = now;
     });
+
+    return {
+      open: function (list, i) {
+        if (!list.length) return;
+        items = list;
+        lastFocus = document.activeElement;
+        show(i || 0);
+        box.hidden = false;
+        document.body.classList.add('is-locked');
+        $('[data-lightbox-close]', box).focus();
+      }
+    };
   }
+
+  /* ---------------------------------------------------------
+     갤러리 — 가로 스와이프는 CSS scroll-snap 이 담당하고
+     JS 는 라이트박스 열기만 맡습니다.
+     --------------------------------------------------------- */
+  function initGallery() {
+    var track = $('[data-gallery]');
+    if (!track || !lightbox) return;
+
+    var items = $$('img', track).map(function (im, i) {
+      return { src: im.getAttribute('src'), alt: '신랑 신부 사진 ' + (i + 1) };
+    });
+
+    $$('[data-gallery-open]', track).forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        lightbox.open(items, parseInt(btn.getAttribute('data-gallery-open'), 10) || 0);
+      });
+    });
+  }
+
   /* ---------------------------------------------------------
      7. 오시는 길 — 주소 복사 + 지도앱 딥링크
      API 키를 쓰지 않으려고 좌표/장소ID 대신 '검색' 스킴을 씁니다.
@@ -365,18 +384,26 @@
   var VENUE_NAME = '메리다웨딩컨벤션';
 
   var MAP_LINKS = {
+    /* 네이버는 커스텀 스킴이 잘 동작하는 것을 실기기에서 확인했습니다. */
     naver: {
-      app: 'nmap://search?query=' + encodeURIComponent(VENUE_NAME) +
-           '&appname=' + encodeURIComponent(location.hostname || 'wedding'),
+      scheme: 'nmap://search?query=' + encodeURIComponent(VENUE_NAME) +
+              '&appname=' + encodeURIComponent(location.hostname || 'wedding'),
       web: 'https://map.naver.com/p/search/' + encodeURIComponent(VENUE_NAME)
     },
+    /* 카카오는 kakaomap:// 을 쓰면 앱으로 넘어가기 전에 브라우저가
+       "주소가 유효하지 않습니다"를 띄웁니다. 공식 https 링크는 스킴이 아니라
+       그 경고가 없고, 앱이 깔려 있으면 앱으로 열립니다. */
     kakao: {
-      app: 'kakaomap://search?q=' + encodeURIComponent(VENUE_NAME),
-      web: 'https://map.kakao.com/?q=' + encodeURIComponent(VENUE_NAME)
+      link: 'https://map.kakao.com/link/search/' + encodeURIComponent(VENUE_NAME)
     },
+    /* T map 은 https 대체 링크가 없습니다. 스킴을 직접 띄우면 앱이 없을 때
+       경고창이 뜨므로 숨긴 iframe 으로 조용히 시도합니다. */
     tmap: {
-      app: 'tmap://search?name=' + encodeURIComponent(VENUE_NAME),
-      web: ''            /* T map 은 쓸만한 웹 대체가 없습니다 */
+      scheme: 'tmap://search?name=' + encodeURIComponent(VENUE_NAME),
+      quiet: true,
+      store: /iPhone|iPad|iPod/i.test(navigator.userAgent)
+        ? 'https://apps.apple.com/kr/app/id431589174'
+        : 'https://play.google.com/store/apps/details?id=com.skt.tmap.ku'
     }
   };
 
@@ -384,9 +411,23 @@
     return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   }
 
+  /* 숨긴 iframe 으로 스킴을 띄웁니다. 앱이 없어도 브라우저 경고창이 뜨지 않습니다. */
+  function quietLaunch(scheme) {
+    var frame = document.createElement('iframe');
+    frame.style.display = 'none';
+    frame.src = scheme;
+    document.body.appendChild(frame);
+    setTimeout(function () {
+      if (frame.parentNode) frame.parentNode.removeChild(frame);
+    }, 800);
+  }
+
   function openMap(key) {
     var link = MAP_LINKS[key];
     if (!link) return;
+
+    /* 스킴이 없는 곳(카카오)은 그냥 링크를 엽니다 — PC 든 모바일이든 동작합니다. */
+    if (link.link) { window.open(link.link, '_blank', 'noopener'); return; }
 
     if (!isMobile()) {
       if (link.web) window.open(link.web, '_blank', 'noopener');
@@ -398,17 +439,26 @@
     var onHide = function () { left = true; };
     document.addEventListener('visibilitychange', onHide, { once: true });
 
-    window.location.href = link.app;
+    if (link.quiet) quietLaunch(link.scheme);
+    else window.location.href = link.scheme;
 
     setTimeout(function () {
       document.removeEventListener('visibilitychange', onHide);
       if (left || document.hidden) return;      /* 앱이 열렸습니다 */
       if (link.web) window.location.href = link.web;
-      else toast('T map 앱이 설치되어 있지 않습니다.');
-    }, 1400);
+      else if (link.store) toast('T map 앱이 없습니다. 네이버지도나 카카오맵을 이용해 주세요.');
+    }, 1500);
   }
 
   function initVenue() {
+    var mapBtn = $('[data-map-open]');
+    if (mapBtn && lightbox) {
+      var mapImg = $('img', mapBtn);
+      mapBtn.addEventListener('click', function () {
+        lightbox.open([{ src: mapImg.getAttribute('src'), alt: mapImg.getAttribute('alt') }], 0);
+      });
+    }
+
     var addrEl = $('[data-addr]');
     var copyBtn = $('[data-copy-addr]');
     if (addrEl && copyBtn) {
@@ -467,7 +517,14 @@
      ★ 규칙 3 — 접수 확인 문구에 하객 성함이 그대로 들어갑니다.
        [data-user-content] 가 붙은 요소에만 넣고, textContent 만 씁니다.
      --------------------------------------------------------- */
-  var RSVP_ENDPOINT = '';   /* 배포 시 Google Apps Script 웹앱 URL */
+  /* 배포 시 Actions Secret(RSVP_ENDPOINT)으로 치환됩니다.
+     공개 저장소라 엔드포인트를 그대로 커밋하면 아무나 시트에 쓸 수 있습니다.
+     치환되지 않은 상태면 아래 hasEndpoint() 가 false 가 되어 미리보기로 동작합니다. */
+  var RSVP_ENDPOINT = '__RSVP_ENDPOINT__';
+
+  function hasEndpoint() {
+    return RSVP_ENDPOINT.indexOf('http') === 0;
+  }
   var KAKAO_FALLBACK = '전송이 되지 않았습니다. 번거로우시겠지만 카카오톡으로 알려 주세요.';
 
   function initRsvp() {
@@ -544,7 +601,7 @@
       var ok = name + '님, 참석 여부를 받았습니다. 고맙습니다.';
       var no = name + '님, 알려 주셔서 고맙습니다. 마음만으로도 충분합니다.';
 
-      if (!RSVP_ENDPOINT) {
+      if (!hasEndpoint()) {
         /* 아직 시트를 연결하지 않았습니다. 성공한 척하지 않습니다. */
         say((yes ? ok : no) + '\n(현재는 미리보기라 저장되지 않습니다)', 'demo');
         return;
@@ -553,16 +610,28 @@
       submitBtn.disabled = true;
       submitBtn.textContent = '보내는 중…';
 
-      /* text/plain 으로 보내 CORS preflight 를 피합니다 (설계 문서 §6) */
+      /* text/plain 으로 보내 CORS preflight 를 피합니다 (설계 문서 §6).
+         Apps Script 는 googleusercontent.com 으로 리다이렉트한 뒤 JSON 을 돌려줍니다. */
       fetch(RSVP_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload)
       })
-        .then(function (r) { if (!r.ok) throw new Error('bad status'); return r.text(); })
-        .then(function () {
+        .then(function (r) { return r.text(); })
+        .then(function (text) {
+          var res = null;
+          try { res = JSON.parse(text); } catch (err) { /* 파싱 실패는 아래에서 처리 */ }
+
+          /* 서버가 명시적으로 거절한 경우에만 실패로 봅니다.
+             응답을 못 읽었다고 실패로 처리하면, 실제로는 저장됐는데
+             하객이 다시 보내서 중복이 쌓입니다. */
+          if (res && res.ok === false) {
+            say('보내지 못했습니다. ' + KAKAO_FALLBACK, 'error');
+            return;
+          }
+
           say(yes ? ok : no, 'ok');
-          form.querySelector('.rsvp-submit').hidden = true;
+          submitBtn.hidden = true;
           haptic(14);
         })
         .catch(function () { say(KAKAO_FALLBACK, 'error'); })
@@ -580,6 +649,7 @@
      --------------------------------------------------------- */
   function boot() {
     initReveal();
+    lightbox = initLightbox();
     initSnow();
     initCountdown();
     initGallery();

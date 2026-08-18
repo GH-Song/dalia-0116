@@ -63,9 +63,10 @@ jobs:
         env:
           SITE_URL: ${{ steps.pages.outputs.base_url }}
 
-      - name: 계좌번호 주입 (Secrets 없으면 더미)
+      - name: 계좌번호 · RSVP 엔드포인트 주입 (Secrets 없으면 더미/미리보기)
         run: python3 tools/inject-secrets.py
         env:
+          RSVP_ENDPOINT: ${{ secrets.RSVP_ENDPOINT }}
           ACCT_GROOM: ${{ secrets.ACCT_GROOM }}
           ACCT_GROOM_HOST: ${{ secrets.ACCT_GROOM_HOST }}
           ACCT_BRIDE: ${{ secrets.ACCT_BRIDE }}
