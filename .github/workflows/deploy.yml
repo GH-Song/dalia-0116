@@ -1,0 +1,89 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 빌드 도구 설치
+        run: pip install "fonttools[woff]" brotli pillow
+
+      # ---- 저장소 상태 검사 (치환 전에 해야 의미가 있습니다) ----
+      - name: 게이트 ④ 개인정보 — 실제 계좌번호가 커밋되지 않았는가
+        run: ./tools/check-privacy.sh
+
+      - name: 게이트 ① 색상 — style.css 에 색상 리터럴이 없는가
+        run: ./tools/check-colors.sh
+
+      # ---- 자산 생성 ----
+      - name: 폰트 서브셋 생성
+        run: python3 tools/subset-fonts.py
+
+      - name: OG 카드 이미지 생성
+        run: python3 tools/make-og.py
+
+      - name: 게이트 ② 글리프 — 고정 텍스트가 폰트에 전부 있는가
+        run: python3 tools/check-glyphs.py
+
+      - name: 게이트 ③ 용량 — 예산을 넘지 않는가
+        run: ./tools/check-budget.sh
+
+      # ---- 배포본에만 실제 값을 주입합니다 ----
+      - uses: actions/configure-pages@v5
+        id: pages
+
+      - name: 사이트 절대 URL 주입 (og:image 는 상대경로가 안 됩니다)
+        run: |
+          python3 - <<'PY'
+          import os, pathlib
+          url = os.environ["SITE_URL"].rstrip("/")
+          p = pathlib.Path("index.html")
+          p.write_text(p.read_text(encoding="utf-8").replace("__SITE_URL__", url), encoding="utf-8")
+          print("SITE_URL =", url)
+          PY
+        env:
+          SITE_URL: ${{ steps.pages.outputs.base_url }}
+
+      - name: 계좌번호 주입 (Secrets 없으면 더미)
+        run: python3 tools/inject-secrets.py
+        env:
+          ACCT_GROOM: ${{ secrets.ACCT_GROOM }}
+          ACCT_GROOM_HOST: ${{ secrets.ACCT_GROOM_HOST }}
+          ACCT_BRIDE: ${{ secrets.ACCT_BRIDE }}
+          ACCT_BRIDE_HOST: ${{ secrets.ACCT_BRIDE_HOST }}
+
+      - name: 배포본 정리 (원본 폰트·빌드 스크립트는 올리지 않습니다)
+        run: rm -rf assets/fonts/src tools docs .github accounts.dummy.json
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

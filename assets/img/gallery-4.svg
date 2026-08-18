@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" width="400" height="500" role="img" aria-label="사진 자리">
+<rect width="400" height="500" fill="#E5E6DC"/>
+<g fill="none" stroke="#C0C7B9" stroke-width="1.4" stroke-linecap="round">
+<path d="M200 330V210"/><ellipse cx="182" cy="238" rx="17" ry="12" transform="rotate(-28 182 238)"/>
+<ellipse cx="218" cy="238" rx="17" ry="12" transform="rotate(28 218 238)"/>
+<ellipse cx="184" cy="272" rx="15" ry="11" transform="rotate(-26 184 272)"/>
+<ellipse cx="216" cy="272" rx="15" ry="11" transform="rotate(26 216 272)"/>
+<ellipse cx="186" cy="304" rx="13" ry="9" transform="rotate(-24 186 304)"/>
+<ellipse cx="214" cy="304" rx="13" ry="9" transform="rotate(24 214 304)"/>
+</g>
+<text x="200" y="372" text-anchor="middle" font-family="Georgia,serif" font-size="15" fill="#7E8579" letter-spacing="3">04</text>
+</svg>

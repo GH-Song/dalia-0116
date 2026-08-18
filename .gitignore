@@ -1,3 +1,8 @@
 .DS_Store
+_preview.html
+
+# 빌드 산출물 — tools/ 스크립트가 생성합니다
 assets/fonts/
+assets/img/og.png
+
 *.local.json
