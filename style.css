@@ -436,9 +436,8 @@ option {
 [data-h="2"] { animation-delay: 0.38s; }
 [data-h="3"] { animation-delay: 0.55s; }
 [data-h="4"] { animation-delay: 0.72s; }
-[data-h="5"] { animation-delay: 0.95s; }
-[data-h="6"] { animation-delay: 1.12s; }
-[data-h="7"] { animation-delay: 1.5s; }
+[data-h="5"] { animation-delay: 0.98s; }
+[data-h="6"] { animation-delay: 1.35s; }
 @keyframes heroIn {
   from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: none; }
@@ -449,16 +448,6 @@ option {
   color: var(--color-accent);
 }
 
-.hero-save {
-  font-family: var(--font-en);
-  font-size: var(--fs-xs);
-  text-transform: uppercase;
-  letter-spacing: var(--tr-eyebrow);
-  text-indent: var(--tr-eyebrow);
-  color: var(--color-muted-strong);
-  margin-top: var(--space-4);
-}
-
 .hero-datemark {
   font-family: var(--font-en);
   font-variant-numeric: lining-nums;
@@ -467,7 +456,7 @@ option {
   letter-spacing: 0.24em;
   text-indent: 0.24em;
   color: var(--color-accent);
-  margin-top: var(--space-2);
+  margin-top: var(--space-4);
 }
 
 /* 이름 & 이름 — 이 페이지의 중심 */
@@ -490,14 +479,6 @@ option {
   font-size: 2.1rem;
   color: var(--color-primary);
   transform: translateY(0.08em);   /* 스크립트 &의 시각 중심 보정 */
-}
-
-.hero-verb {
-  font-size: var(--fs-base);
-  letter-spacing: 0.34em;
-  text-indent: 0.34em;
-  color: var(--color-muted-strong);
-  margin-top: var(--space-4);
 }
 
 /* 골드 헤어라인 + 중앙 점 — 유리 각인 대신 온기 있는 오너먼트 */
@@ -572,13 +553,15 @@ option {
 
 /* =============================================================
    15. 신랑과 신부 — 라운드 카드 (설계 문서 §5 v2)
+   v3 — 여백 컴팩트(스크롤 피로 축소), 이름은 accent 대신
+   본문 글자색(저채도 에스프레소). "너무 붉다"는 피드백 반영.
    ============================================================= */
 .couple-cards { text-align: center; }
 
 .couple-card {
   background: var(--color-surface);
   border-radius: var(--radius-card);
-  padding: var(--space-6) var(--space-5);
+  padding: var(--space-5) var(--space-4);
   box-shadow: var(--shadow-card);
 }
 
@@ -594,8 +577,8 @@ option {
   font-size: var(--fs-xl);
   letter-spacing: 0.14em;
   text-indent: 0.14em;
-  color: var(--color-accent);
-  margin-top: var(--space-3);
+  color: var(--color-text);
+  margin-top: var(--space-2);
 }
 
 .couple-roman {
@@ -610,13 +593,13 @@ option {
 .couple-line {
   font-size: var(--fs-sm);
   color: var(--color-muted-strong);
-  margin-top: var(--space-4);
+  margin-top: var(--space-3);
 }
 
 .couple-amp {
   font-size: 2rem;
   color: var(--color-primary);
-  margin-block: var(--space-3);
+  margin-block: var(--space-2);
 }
 
 /* =============================================================
@@ -708,11 +691,15 @@ option {
   color: var(--color-accent);
   margin-top: var(--space-2);
 }
-.dday-tail {
+/* 뷔페 안내 — 예식일 정보의 반복(dday-tail) 대신 들어온 한 줄 (v3) */
+.day-meal {
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: var(--hairline) solid var(--color-line-faint);
+  text-align: center;
   font-size: var(--fs-sm);
-  line-height: 1.75;
+  line-height: 1.8;
   color: var(--color-muted-strong);
-  margin-top: var(--space-3);
 }
 
 /* =============================================================
@@ -933,6 +920,49 @@ body.is-locked { overflow: hidden; }
 }
 .venue-card strong { font-weight: 400; color: var(--color-text); }
 
+/* 경로 줄 (v3) — 도착 거점 대표 문구. 좁은 화면에서 줄바꿈되면
+   두 번째 줄이 들여쓰기되도록 행잉 인덴트를 겁니다. */
+.route-list li {
+  padding-left: 0.9em;
+  text-indent: -0.9em;
+  font-size: var(--fs-sm);
+  line-height: 1.85;
+  color: var(--color-muted-strong);
+}
+.route-list li + li { margin-top: var(--space-2); }
+.route-list strong { font-weight: 400; color: var(--color-text); }
+
+/* 거점 → 예식장 표 (설계 문서 §5-1) — 이 섹션의 핵심 전달물.
+   "여기 내리면 몇 분·얼마"가 행 단위로 한눈에 잡혀야 합니다. */
+.hub-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.hub-unit {
+  flex-shrink: 0;
+  font-size: var(--fs-xs);
+  color: var(--color-muted);
+  letter-spacing: 0.05em;
+}
+.hub-list li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-block: var(--space-2);
+}
+.hub-list li + li { border-top: var(--hairline) solid var(--color-line-faint); }
+.hub-from { font-size: var(--fs-sm); }
+.hub-val {
+  flex-shrink: 0;
+  font-size: var(--fs-sm);
+  color: var(--color-muted-strong);
+  font-variant-numeric: lining-nums tabular-nums;
+  font-feature-settings: "lnum" 1, "tnum" 1;
+}
+
 /* 카드 하단 각주 — 소요시간·요금 같은 참조 정보.
    본문(추천 경로)보다 한 단계 작고 옅게, 얇은 선으로 구분합니다.
    p 를 붙여 (0,2,1) — 위 `.venue-card > p:last-child` 와 동률을 만들고
@@ -966,7 +996,8 @@ body.is-locked { overflow: hidden; }
    20. 마음 전하실 곳 — 라운드 접이식. JS 불필요.
    ============================================================= */
 .account-lead,
-.rsvp-lead {
+.rsvp-lead,
+.gb-lead {
   text-align: center;
   font-size: var(--fs-sm);
   line-height: 1.85;
@@ -1137,7 +1168,8 @@ body.is-locked { overflow: hidden; }
 
 /* 전송 중 — Apps Script 가 2~3초 걸립니다. 아무 표시가 없으면
    멈춘 줄 알고 다시 누르게 되므로 버튼이 살아있다는 신호를 줍니다. */
-.rsvp-submit.is-sending {
+.rsvp-submit.is-sending,
+.gb-submit.is-sending {
   opacity: 0.75;
   animation: sendingPulse 1.4s var(--ease-out) infinite;
 }
@@ -1146,7 +1178,8 @@ body.is-locked { overflow: hidden; }
   50%      { opacity: 0.9; }
 }
 
-.rsvp-result {
+.rsvp-result,
+.gb-result {
   margin-top: var(--space-4);
   white-space: pre-line;   /* 확인 문구의 의도적 줄바꿈을 살립니다 */
   padding: var(--space-4);
@@ -1156,8 +1189,144 @@ body.is-locked { overflow: hidden; }
   line-height: 1.7;
   text-align: center;
 }
-.rsvp-result[data-state="error"] { color: var(--color-danger); }
-.rsvp-result[data-state="sending"] { color: var(--color-muted-strong); }
+.rsvp-result[data-state="error"],
+.gb-result[data-state="error"] { color: var(--color-danger); }
+.rsvp-result[data-state="sending"],
+.gb-result[data-state="sending"] { color: var(--color-muted-strong); }
+
+/* =============================================================
+   21-1. 방명록 (설계 문서 §6 v3)
+   규칙 3 — 목록·결과가 전부 사용자 문자열 (data-user-content)
+   ============================================================= */
+.gb-form { display: grid; gap: var(--space-3); }
+.gb-msg {
+  resize: none;
+  line-height: 1.65;
+  min-height: 5.4rem;
+}
+
+.gb-book { margin-top: var(--space-7); }
+.gb-status {
+  text-align: center;
+  font-size: var(--fs-xs);
+  color: var(--color-muted-strong);
+  letter-spacing: 0.04em;
+}
+
+.gb-list { display: grid; gap: var(--space-3); }
+.gb-item {
+  background: var(--color-surface);
+  border-radius: var(--radius-tile);
+  padding: var(--space-4) var(--space-5);
+  text-align: left;
+}
+.gb-item-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.gb-item-name {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.gb-item-date {
+  flex-shrink: 0;
+  font-size: var(--fs-xs);
+  color: var(--color-muted);
+}
+.gb-item-msg {
+  margin-top: var(--space-2);
+  font-size: var(--fs-sm);
+  line-height: 1.75;
+  color: var(--color-muted-strong);
+  white-space: pre-line;
+  overflow-wrap: anywhere;   /* 긴 이모지·URL 이 카드 밖으로 새지 않게 */
+}
+
+.gb-more { width: 100%; margin-top: var(--space-4); }
+
+/* =============================================================
+   21-2. 첫 방문 참석 의사 팝업 (설계 문서 §6 v3)
+   본문 RSVP 폼이 .popup-slot 으로 이동해 들어옵니다.
+   ============================================================= */
+.popup {
+  position: fixed;
+  inset: 0;
+  z-index: 70;                       /* 눈(40)·토스트(60) 위, 라이트박스(80) 아래 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-5) var(--space-4);
+  background: var(--color-scrim);
+  animation: popupFade var(--dur-base) var(--ease-out) both;
+}
+@keyframes popupFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.popup-card {
+  position: relative;
+  width: min(100%, 24.5rem);
+  max-height: 86vh;
+  max-height: 86svh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  background: var(--color-bg);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-lift);
+  padding: var(--space-6) var(--space-5) var(--space-4);
+  text-align: center;
+  animation: popupUp 0.55s var(--ease-settle) both;
+}
+@keyframes popupUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.popup-close {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  color: var(--color-muted-strong);
+  -webkit-tap-highlight-color: transparent;
+}
+.popup-close:active { opacity: 0.6; }
+
+.popup-title {
+  font-size: var(--fs-lg);
+  letter-spacing: 0.06em;
+  text-indent: 0.06em;
+}
+.popup-lead {
+  font-size: var(--fs-sm);
+  line-height: 1.8;
+  color: var(--color-muted-strong);
+  margin-top: var(--space-3);
+}
+
+.popup-slot {
+  margin-top: var(--space-5);
+  text-align: left;
+}
+/* 팝업 안에서는 폼 간격을 반 박자 줄입니다 */
+.popup-slot .field { margin-bottom: var(--space-5); }
+
+.popup-later {
+  width: 100%;
+  margin-top: var(--space-2);
+  border-color: transparent;
+  color: var(--color-muted-strong);
+  font-size: var(--fs-xs);
+}
 
 /* =============================================================
    22. 푸터 — Thank you (설계 문서 §5 v2)

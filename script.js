@@ -216,28 +216,38 @@
       };
     }
 
-    /* 입자 페이드 (설계 문서 §7 v2.3) — 눈·꽃잎 혼합은 모시는 글까지.
-       그 아래로는 꽃잎 몇 장만 은은하게. 기준선은 .greeting 하단. */
-    var fadeBase = 0;                        /* resize() 에서 잽니다 */
-    var KEEP = 4;                            /* 페이드 뒤 남는 꽃잎 수 */
+    /* 입자 페이드 (설계 문서 §7 v2.3 + v3 연속성) — 눈·꽃잎 혼합은
+       모시는 글까지, 그 아래로는 꽃잎 몇 장만. 기준선은 .greeting 하단.
 
-    function fadeProgress() {
+       ★ v3 — 아무리 빠르게 왕복 스크롤해도 점멸·순간이동이 없어야 합니다.
+         · 진행도 p 는 프레임마다 한 번 계산해 모두가 공유합니다.
+           스폰 시점의 p 를 알파에 구워 두지 않습니다 — 구우면 위로
+           되돌아왔을 때 어두운 입자가 남습니다.
+         · 컬링은 양방향 페이드 — 사라질 때도, 되살아날 때도 연속으로만.
+         · 완전히 잠든 입자만 화면 위에서 재진입합니다. */
+    var fadeBase = 0;              /* layout() 에서 잽니다 */
+    var KEEP = 4;                  /* 페이드 뒤 남는 꽃잎 수 */
+    var FADE_RATE = 0.4;           /* 초당 페이드 변화량 — 약 2.5초에 완주 */
+
+    function progress() {
       if (!fadeBase) return 0;
-      var vh = window.innerHeight || 1;
+      var vh = h || 1;
       var y = window.scrollY || document.documentElement.scrollTop || 0;
       /* 모시는 글 하단이 화면 중턱을 지날 때 시작, 1.2 뷰포트에 걸쳐 완료 */
       return Math.min(1, Math.max(0, (y - (fadeBase - vh * 0.6)) / (vh * 1.2)));
     }
 
-    /* 지금 스크롤 위치에서 살아 있어도 되는 입자 수 */
-    function quota() {
-      var p = fadeProgress();
-      if (p <= 0) return bits.length;
-      return Math.max(KEEP, Math.round(bits.length - (bits.length - KEEP) * p));
+    function targetCount() {
+      return Math.max(9, Math.min(26, Math.round((w * h) / 34000)));
     }
 
-    function spawn(y) {
-      var p = fadeProgress();
+    /* 지금 스크롤 위치에서 온전히 살아 있어도 되는 입자 수 */
+    function quota(p, n) {
+      if (p <= 0) return n;
+      return Math.max(KEEP, Math.round(n - (n - KEEP) * p));
+    }
+
+    function spawn(p, y) {
       /* 모시는 글 아래로 내려갈수록 눈이 그치고 꽃잎만 남습니다 */
       var isFlake = Math.random() < 0.62 * (1 - p);
       var big = Math.random() < 0.4;
@@ -253,25 +263,37 @@
         rate: 0.10 + Math.random() * 0.20,
         spin: (Math.random() - 0.5) * 0.6,             /* 초당 회전 rad */
         rot: Math.random() * Math.PI * 2,
-        /* 글자 위를 지나가므로 진하면 읽기를 방해합니다 (설계 문서 §7 0.40~0.85,
-           페이드 구간에서는 최대 40% 감쇠 — '정말 은은하게') */
-        alpha: (0.40 + Math.random() * 0.45) * (1 - 0.4 * p)
+        /* 글자 위를 지나가므로 진하면 읽기를 방해합니다 (0.40~0.85).
+           스크롤 감쇠는 그리는 순간의 p 로 계산합니다. */
+        base: 0.40 + Math.random() * 0.45,
+        fade: 1,        /* 컬링 페이드 배율 0~1 — 양방향 연속 변화만 허용 */
+        asleep: false
       };
     }
 
-    function seed(n) {
+    function seed() {
+      var n = targetCount();
+      var p = progress();
+      var q = quota(p, n);
       bits = [];
-      for (var i = 0; i < n; i++) bits.push(spawn(Math.random() * h));
-      for (var k = quota(); k < n; k++) bits[k].asleep = true;
+      for (var i = 0; i < n; i++) {
+        var b = spawn(p, Math.random() * h);
+        if (i >= q) { b.fade = 0; b.asleep = true; }
+        bits.push(b);
+      }
     }
 
-    function resize() {
-      /* 뷰포트 크기를 캔버스 자체 대신 window 에서 읽습니다.
-         레이아웃 타이밍에 따라 clientWidth 가 0 으로 잡히는 경우가 있습니다. */
-      w = window.innerWidth || document.documentElement.clientWidth || 0;
-      h = window.innerHeight || document.documentElement.clientHeight || 0;
-      if (!w || !h) return false;
+    /* 캔버스 크기·페이드 기준선만 갱신합니다. 입자는 건드리지 않습니다.
+       반환 — 폭이 바뀌었는지(회전 등), 아직 잴 수 없으면 null.
+       뷰포트는 캔버스 대신 window 에서 읽습니다 — 레이아웃 타이밍에
+       따라 clientWidth 가 0 으로 잡히는 경우가 있습니다. */
+    function layout() {
+      var nw = window.innerWidth || document.documentElement.clientWidth || 0;
+      var nh = window.innerHeight || document.documentElement.clientHeight || 0;
+      if (!nw || !nh) return null;
 
+      var widthChanged = Math.abs(nw - w) > 1;
+      w = nw; h = nh;
       canvas.width  = Math.round(w * dpr);
       canvas.height = Math.round(h * dpr);
       canvas.style.width = w + 'px';
@@ -282,8 +304,7 @@
       /* 입자 페이드 기준선 — 모시는 글 하단 (설계 문서 §7 v2.3) */
       var greeting = document.querySelector('.greeting');
       fadeBase = greeting ? greeting.offsetTop + greeting.offsetHeight : 0;
-      seed(Math.max(9, Math.min(26, Math.round((w * h) / 34000))));
-      return true;
+      return widthChanged;
     }
 
     function frame(now) {
@@ -292,41 +313,41 @@
 
       ctx.clearRect(0, 0, w, h);
 
-      var q = quota();
+      var p = progress();
+      var q = quota(p, bits.length);
+      var dim = 1 - 0.4 * p;     /* 페이드 구간 전역 감쇠 — '정말 은은하게' */
+
       for (var i = 0; i < bits.length; i++) {
         var b = bits[i];
 
-        /* 잠든 입자 — 쿼터가 회복되면(위로 스크롤) 다시 태어납니다 */
+        /* 잠든 입자 — 쿼터가 회복되면(위로 스크롤) 화면 위에서 재진입 */
         if (b.asleep) {
-          if (i < q) b = bits[i] = spawn();
+          if (i < q) { b = bits[i] = spawn(p); b.fade = 0; }
           else continue;
         }
+
+        /* 컬링 페이드 — 목표(살림 1 / 재움 0)를 향해 연속으로만 움직입니다.
+           낙하가 느려(초당 7~23px) 화면 밖을 기다리면 1분씩 걸리므로
+           2~3초 감쇠로 재우고, 경계에서 왕복해도 알파가 튀지 않습니다. */
+        var goal = i < q ? 1 : 0;
+        if (b.fade < goal)      b.fade = Math.min(goal, b.fade + dt * FADE_RATE);
+        else if (b.fade > goal) b.fade = Math.max(goal, b.fade - dt * FADE_RATE);
+        if (goal === 0 && b.fade <= 0.02) { b.asleep = true; continue; }
 
         b.y += b.vy * dt;
         b.phase += b.rate * dt * Math.PI * 2;
         b.rot += b.spin * dt;
 
-        /* 쿼터 초과 — 낙하는 느려서(초당 7~23px) 화면 밖까지 기다리면
-           1분씩 걸립니다. 2~3초에 걸쳐 옅어지다 잠드는 쪽이 '자연스럽게
-           사라지면서'에 맞습니다. */
-        if (i >= q) {
-          b.alpha -= dt * 0.3;
-          if (b.alpha <= 0.02) { b.asleep = true; continue; }
-        }
-
         if (b.y - b.size > h) {
-          if (i < q) {
-            b = bits[i] = spawn();
-          } else {
-            b.asleep = true;
-            continue;
-          }
+          if (i < q) { bits[i] = spawn(p); }   /* 다음 프레임부터 위에서 다시 */
+          else { b.asleep = true; }
+          continue;
         }
 
         var x = b.x + Math.sin(b.phase) * b.sway;
 
         ctx.save();
-        ctx.globalAlpha = b.alpha;
+        ctx.globalAlpha = b.base * b.fade * dim;
         ctx.translate(x, b.y);
         ctx.rotate(b.rot);
         ctx.drawImage(b.sprite, -b.size / 2, -b.size / 2, b.size, b.size);
@@ -338,16 +359,35 @@
     function start() { if (raf === null && w && h) { last = 0; raf = requestAnimationFrame(frame); } }
     function stop()  { if (raf !== null) { cancelAnimationFrame(raf); raf = null; } }
 
-    if (resize()) start();
+    if (layout() !== null) { seed(); start(); }
     else {
       /* 레이아웃이 아직이면 다음 프레임에 다시 시도합니다 */
-      requestAnimationFrame(function () { if (resize()) start(); });
+      requestAnimationFrame(function () { if (layout() !== null) { seed(); start(); } });
     }
 
+    /* ★ v3 — 모바일 주소창 개폐도 resize 로 들어옵니다. 여기서 재시드하면
+       스크롤 도중 입자가 통째로 재배치되어 점멸처럼 보입니다(기존 버그의
+       주원인). 재시드는 폭이 바뀌는 회전 때만. 그 외에는 캔버스만 맞추고
+       모자란 개수를 위에서 페이드 인으로 늘리기만 합니다. */
     var resizeTimer = null;
     window.addEventListener('resize', function () {
       clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(function () { if (resize()) start(); }, 200);
+      resizeTimer = setTimeout(function () {
+        var widthChanged = layout();
+        if (widthChanged === null) return;
+        if (widthChanged) {
+          seed();
+        } else {
+          var n = targetCount();
+          var p = progress();
+          while (bits.length < n) {
+            var nb = spawn(p);
+            nb.fade = 0;
+            bits.push(nb);
+          }
+        }
+        start();
+      }, 200);
     });
 
     document.addEventListener('visibilitychange', function () {
@@ -666,7 +706,77 @@
   }
 
   /* ---------------------------------------------------------
-     10. 참석 여부
+     10. 첫 방문 참석 의사 팝업 (설계 문서 §6 v3)
+     본문 RSVP 폼 DOM 을 팝업 슬롯으로 옮겼다가 닫을 때 제자리로
+     되돌립니다 — 리스너가 보존되고 마크업 이중화가 없습니다.
+     노출은 기기당 1회. localStorage 가 막힌 인앱 설정에서는
+     매번 뜰 수 있지만 기능은 동작합니다 (수용).
+     --------------------------------------------------------- */
+  var rsvpPopup = null;
+  var POPUP_SEEN_KEY = 'rsvp-popup-seen';
+
+  function popupSeen() {
+    try { return localStorage.getItem(POPUP_SEEN_KEY) === '1'; } catch (e) { return false; }
+  }
+  function markPopupSeen() {
+    try { localStorage.setItem(POPUP_SEEN_KEY, '1'); } catch (e) {}
+  }
+
+  function initRsvpPopup() {
+    var pop = $('[data-rsvp-popup]');
+    var form = $('[data-rsvp]');
+    var slot = pop && $('[data-popup-slot]', pop);
+    if (!pop || !form || !slot) return null;
+
+    var home = form.parentNode;        /* 닫을 때 폼이 돌아갈 자리 */
+    var homeNext = form.nextSibling;
+    var lastFocus = null;
+    var closeTimer = null;
+
+    function open() {
+      if (!pop.hidden) return;
+      lastFocus = document.activeElement;
+      slot.appendChild(form);
+      pop.hidden = false;
+      document.body.classList.add('is-locked');
+      var btn = $('[data-popup-close]', pop);
+      if (btn) btn.focus();
+    }
+
+    function close() {
+      if (pop.hidden) return;
+      if (closeTimer) { clearTimeout(closeTimer); closeTimer = null; }
+      pop.hidden = true;
+      document.body.classList.remove('is-locked');
+      home.insertBefore(form, homeNext);
+      markPopupSeen();
+      if (lastFocus && lastFocus.focus) lastFocus.focus();
+    }
+
+    $$('[data-popup-close]', pop).forEach(function (b) {
+      b.addEventListener('click', close);
+    });
+    pop.addEventListener('click', function (e) {
+      if (e.target === pop) close();       /* 스크림 탭으로 닫기 */
+    });
+    document.addEventListener('keydown', function (e) {
+      if (!pop.hidden && e.key === 'Escape') close();
+    });
+
+    if (!popupSeen()) setTimeout(open, 900);
+
+    return {
+      /* 팝업 안에서 제출을 마치면 확인 문구를 읽을 시간을 주고 닫습니다 */
+      closeSoon: function (ms) {
+        if (pop.hidden) return;
+        if (closeTimer) clearTimeout(closeTimer);
+        closeTimer = setTimeout(close, ms || 1600);
+      }
+    };
+  }
+
+  /* ---------------------------------------------------------
+     11. 참석 여부
      식사 인원 + 답례품 인원 = 총 참석 인원.
      식사는 하지 않고 답례품만 받고 가시는 하객이 있기 때문에
      두 수의 합이 곧 참석 인원이 됩니다.
@@ -761,6 +871,8 @@
       if (!hasEndpoint()) {
         /* 아직 시트를 연결하지 않았습니다. 성공한 척하지 않습니다. */
         say((yes ? ok : no) + '\n(현재는 미리보기라 저장되지 않습니다)', 'demo');
+        markPopupSeen();
+        if (rsvpPopup) rsvpPopup.closeSoon(2600);
         return;
       }
 
@@ -792,6 +904,8 @@
           say(yes ? ok : no, 'ok');
           submitBtn.hidden = true;
           haptic(14);
+          markPopupSeen();
+          if (rsvpPopup) rsvpPopup.closeSoon(1800);
         })
         .catch(function () { say(KAKAO_FALLBACK, 'error'); })
         .then(function () {
@@ -802,6 +916,185 @@
     });
 
     render();
+  }
+
+  /* ---------------------------------------------------------
+     12. 방명록 (설계 문서 §6 v3)
+     ★ 규칙 3 — 이름·메시지·날짜가 전부 사용자 문자열입니다.
+       data-user-content 안에서 textContent 로만 그립니다.
+     같은 Apps Script 웹앱을 씁니다 — 등록은 POST(type:"guestbook"),
+     목록은 GET ?view=guestbook (심플 리퀘스트라 preflight 없음).
+     --------------------------------------------------------- */
+  function initGuestbook() {
+    var section = $('.guestbook');
+    var form = $('[data-guestbook]');
+    var list = $('[data-gb-list]');
+    if (!section || !form || !list) return;
+
+    var statusEl = $('[data-gb-status]');
+    var moreBtn = $('[data-gb-more]');
+    var resultEl = $('[data-gb-result]', form);
+    var submitBtn = $('.gb-submit', form);
+
+    var SHOW = 5;             /* 처음 보여줄 개수 */
+    var items = [];           /* {t, name, message, demo} 최신순 */
+    var expanded = false;
+    var loaded = false;
+
+    function pad2(n) { return (n < 10 ? '0' : '') + n; }
+    function fmtDate(t) {
+      var d = new Date(t);
+      if (isNaN(+d)) return '';
+      return d.getFullYear() + '.' + pad2(d.getMonth() + 1) + '.' + pad2(d.getDate());
+    }
+
+    function setStatus(msg) {
+      if (!statusEl) return;
+      if (msg) { statusEl.textContent = msg; statusEl.hidden = false; }
+      else { statusEl.hidden = true; }
+    }
+
+    function render() {
+      list.textContent = '';        /* 비우기 — innerHTML 금지 */
+      var n = expanded ? items.length : Math.min(SHOW, items.length);
+      for (var i = 0; i < n; i++) {
+        var it = items[i];
+        var li = document.createElement('li');
+        li.className = 'gb-item';
+
+        var head = document.createElement('div');
+        head.className = 'gb-item-head';
+        var name = document.createElement('span');
+        name.className = 'gb-item-name';
+        name.textContent = it.name;
+        var date = document.createElement('span');
+        date.className = 'gb-item-date';
+        date.textContent = it.demo ? '미리보기' : fmtDate(it.t);
+        head.appendChild(name);
+        head.appendChild(date);
+
+        var msg = document.createElement('p');
+        msg.className = 'gb-item-msg';
+        msg.textContent = it.message;
+
+        li.appendChild(head);
+        li.appendChild(msg);
+        list.appendChild(li);
+      }
+      list.hidden = items.length === 0;
+      setStatus(items.length === 0
+        ? '아직 남겨진 메시지가 없습니다. 첫 번째 축하를 남겨 주세요.'
+        : '');
+      if (moreBtn) {
+        moreBtn.hidden = expanded || items.length <= SHOW;
+        if (!moreBtn.hidden) {
+          moreBtn.textContent = '메시지 더 보기 (' + (items.length - SHOW) + ')';
+        }
+      }
+    }
+
+    function load() {
+      if (loaded) return;
+      loaded = true;
+      if (!hasEndpoint()) { render(); return; }
+
+      fetch(RSVP_ENDPOINT + (RSVP_ENDPOINT.indexOf('?') < 0 ? '?' : '&') + 'view=guestbook')
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+          if (res && res.ok && res.items && res.items.length) {
+            items = res.items.map(function (it) {
+              return { t: it.t, name: String(it.name || ''), message: String(it.message || '') };
+            }).filter(function (it) { return it.name && it.message; });
+          }
+          render();
+        })
+        .catch(function () {
+          setStatus('메시지를 불러오지 못했습니다. 잠시 뒤 다시 열어 주세요.');
+        });
+    }
+
+    /* 목록은 섹션이 다가올 때 한 번만 — 첫 화면 로딩과 무관하게 둡니다 */
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (entries) {
+        if (entries.some(function (en) { return en.isIntersecting; })) {
+          io.disconnect();
+          load();
+        }
+      }, { rootMargin: '200px 0px' });
+      io.observe(section);
+    } else {
+      load();
+    }
+
+    if (moreBtn) {
+      moreBtn.addEventListener('click', function () {
+        expanded = true;
+        render();
+      });
+    }
+
+    function say(message, state_) {
+      resultEl.textContent = message;      /* innerHTML 금지 */
+      resultEl.setAttribute('data-state', state_);
+      resultEl.hidden = false;
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      load();                              /* 목록보다 먼저 제출하는 경우 대비 */
+
+      var nameInput = $('#gb-name', form);
+      var msgInput = $('#gb-msg', form);
+      var name = nameInput.value.trim();
+      var message = msgInput.value.trim();
+
+      if (!name) { say('성함을 적어 주세요.', 'error'); nameInput.focus(); return; }
+      if (!message) { say('메시지를 적어 주세요.', 'error'); msgInput.focus(); return; }
+
+      if (!hasEndpoint()) {
+        /* 아직 시트를 연결하지 않았습니다. 성공한 척하지 않습니다. */
+        items.unshift({ t: null, demo: true, name: name, message: message });
+        render();
+        say('지금은 미리보기라 저장되지 않습니다.', 'demo');
+        form.reset();
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.classList.add('is-sending');
+      submitBtn.textContent = '남기는 중…';
+
+      fetch(RSVP_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          type: 'guestbook',
+          name: name,
+          message: message,
+          timestamp: new Date().toISOString()
+        })
+      })
+        .then(function (r) { return r.text(); })
+        .then(function (text) {
+          var res = null;
+          try { res = JSON.parse(text); } catch (err) { /* 아래에서 처리 */ }
+          if (res && res.ok === false) {
+            say('남기지 못했습니다. 잠시 뒤 다시 시도해 주세요.', 'error');
+            return;
+          }
+          items.unshift({ t: new Date().toISOString(), name: name, message: message });
+          render();
+          say('소중한 축하의 말씀, 감사히 간직하겠습니다.', 'ok');
+          form.reset();
+          haptic(12);
+        })
+        .catch(function () { say('남기지 못했습니다. 잠시 뒤 다시 시도해 주세요.', 'error'); })
+        .then(function () {
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('is-sending');
+          submitBtn.textContent = '메시지 남기기';
+        });
+    });
   }
 
   /* ---------------------------------------------------------
@@ -816,7 +1109,9 @@
     initVenue();
     initAccount();
     initShare();
+    rsvpPopup = initRsvpPopup();
     initRsvp();
+    initGuestbook();
   }
 
   if (document.readyState === 'loading') {
