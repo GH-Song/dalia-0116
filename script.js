@@ -609,6 +609,8 @@
 
       submitBtn.disabled = true;
       submitBtn.textContent = '보내는 중…';
+      submitBtn.classList.add('is-sending');
+      say('보내는 중입니다. 잠시만 기다려 주세요.', 'sending');
 
       /* text/plain 으로 보내 CORS preflight 를 피합니다 (설계 문서 §6).
          Apps Script 는 googleusercontent.com 으로 리다이렉트한 뒤 JSON 을 돌려줍니다. */
@@ -637,6 +639,7 @@
         .catch(function () { say(KAKAO_FALLBACK, 'error'); })
         .then(function () {
           submitBtn.disabled = false;
+          submitBtn.classList.remove('is-sending');
           submitBtn.textContent = '참석 여부 보내기';
         });
     });

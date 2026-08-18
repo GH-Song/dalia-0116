@@ -975,3 +975,15 @@ body.is-locked { overflow: hidden; }
   left: -23.2%;       /* -887 / 3826 */
   top: -28.9%;        /* -730 / 5051 * (6653/3826) * (3826/2522) */
 }
+
+/* 전송 중 — Apps Script 가 2~3초 걸립니다. 아무 표시가 없으면
+   멈춘 줄 알고 다시 누르게 되므로 버튼이 살아있다는 신호를 줍니다. */
+.rsvp-submit.is-sending {
+  opacity: 0.75;
+  animation: sendingPulse 1.4s var(--ease-out) infinite;
+}
+@keyframes sendingPulse {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 0.9; }
+}
+.rsvp-result[data-state="sending"] { color: var(--color-muted-strong); }
