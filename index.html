@@ -85,8 +85,7 @@
     <div class="greeting-body" data-rv="2">
       <p>겨울의 한가운데에도<br>볕이 드는 자리가 있습니다.</p>
       <p>서로에게 꼭 그런 자리가 되어 온<br>저희 두 사람,<br>이제 평생을 약속하려 합니다.</p>
-      <p>처음 만난 날로부터 열 번째 겨울,<br>마주 보며 웃던 날들을 지나<br>같은 곳을 바라보며<br>나란히 걷겠습니다.</p>
-      <p>새해 첫 달, 맑은 한낮의 약속에<br>귀한 걸음 하시어 축복해 주시면<br>따뜻한 식사 한 끼 대접하며<br>감사한 마음 전하겠습니다.</p>
+      <p>함께한 지 열 해 되는 날,<br>저희는 부부가 됩니다.<br>귀한 걸음 하시어 축복해 주시면<br>따뜻한 식사 한 끼 대접하며<br>감사한 마음 전하겠습니다.</p>
     </div>
 
     <p class="greeting-closer" data-rv="3" data-face="script" aria-hidden="true">The warmest day of winter.</p>
@@ -294,7 +293,7 @@
           <path d="M4.2 16.5l3.1-.3M4.2 16.5l.3-3.1M19.8 7.5l-3.1.3M19.8 7.5l-.3 3.1"/>
         </g>
       </svg>
-      1월 예식이라 도로가 얼거나 눈이 올 수 있습니다.<br>
+      1월 예식이라 도로가 얼거나 <span class="nb">눈이 올 수 있습니다.</span><br>
       시간을 넉넉히 두고 출발해 주세요.
     </p>
 
@@ -303,7 +302,7 @@
          요금은 싣지 않습니다(사용자 결정 — 시간만). -->
     <div class="venue-tabs" role="tablist" aria-label="오시는 방법">
       <button class="venue-tab" type="button" role="tab" id="vtab-car"
-              aria-controls="vpanel-car" aria-selected="true">자가용&middot;주차</button>
+              aria-controls="vpanel-car" aria-selected="true">자차</button>
       <button class="venue-tab" type="button" role="tab" id="vtab-train"
               aria-controls="vpanel-train" aria-selected="false">기차</button>
       <button class="venue-tab" type="button" role="tab" id="vtab-bus"
@@ -311,35 +310,50 @@
     </div>
 
     <div class="venue-card venue-panel" role="tabpanel" id="vpanel-car" aria-labelledby="vtab-car">
-      <ul class="route-list">
-        <li>내비게이션 &mdash; <strong>메리다웨딩컨벤션</strong> 검색</li>
-        <li>주차 &mdash; <strong>웨딩홀 자체 무료 주차장</strong> (1,500대)</li>
+      <ul class="stops">
+        <li>
+          <p class="stop-head">내비게이션 &mdash; <strong>메리다웨딩컨벤션</strong> 검색</p>
+          <p class="stop-go"><span class="go-label">도로명주소</span>충청북도 청주시 청원구 <span class="nb">내수읍 충청대로 400</span></p>
+        </li>
+        <li>
+          <p class="stop-head">주차 &mdash; <strong>웨딩홀 자체 무료 주차장</strong> <span class="nb">(1,500대)</span></p>
+        </li>
       </ul>
       <p class="venue-card-note">예상 소요 &mdash; 서울&middot;인천 약 2시간,
       대전 약 1시간, 부산 약 3시간 30분, 충주 약 50분, 청주 시내 20~30분</p>
     </div>
 
     <div class="venue-card venue-panel" role="tabpanel" id="vpanel-train" aria-labelledby="vtab-train" hidden>
-      <ul class="route-list">
-        <li>서울&middot;수도권&middot;부산 &mdash; KTX&middot;SRT <strong>오송역</strong> 하차</li>
-        <li>대전&middot;충청 &mdash; ITX&middot;무궁화 <strong>청주공항역</strong> 하차</li>
-      </ul>
-      <ul class="go">
-        <li><span class="go-label">택시</span>오송역 25분 &middot; 청주공항역 15분 &middot; 오근장역 10분</li>
+      <ul class="stops">
+        <li>
+          <p class="stop-head">서울&middot;수도권&middot;부산 &mdash; KTX&middot;SRT <span class="nb"><strong>오송역</strong> 하차</span></p>
+          <p class="stop-go"><span class="go-label">택시</span>25분</p>
+        </li>
+        <li>
+          <p class="stop-head">대전&middot;충청 &mdash; ITX&middot;무궁화 <strong>청주공항역</strong> 또는 <span class="nb"><strong>오근장역</strong> 하차</span></p>
+          <p class="stop-go"><span class="go-label">택시</span>청주공항역 15분 &middot; 오근장역 10분</p>
+        </li>
       </ul>
     </div>
 
     <div class="venue-card venue-panel" role="tabpanel" id="vpanel-bus" aria-labelledby="vtab-bus" hidden>
-      <ul class="route-list">
-        <li>전국 대부분 노선 &mdash; <strong>청주터미널</strong>(가경동) 하차</li>
-        <li>충주&middot;증평 &mdash; 종점 전 <strong>북부정류소</strong> 하차</li>
-        <li>서울남부&middot;인천&middot;유성 일부 &mdash; <strong>청주공항</strong>행이 가장 가깝습니다</li>
-      </ul>
-      <ul class="go">
-        <li><span class="go-label">택시</span>청주터미널 25분 &middot; 북부정류소 15분 &middot; 청주공항 10분</li>
-        <li><span class="go-label">시내버스</span>105&middot;105-1 &rarr; <strong>구성3리</strong>(예식장 앞) 하차 &middot; 배차 10분 남짓<br>
-        승차 &mdash; 청주터미널 시외버스정류장(도보 3분) &middot;
-        북부정류소 청주대 정류장(도보 4분, 115-1&middot;119도 정차)</li>
+      <ul class="stops">
+        <li>
+          <p class="stop-head">전국 대부분 노선 &mdash; <span class="nb"><strong>청주터미널</strong>(가경동) 하차</span></p>
+          <p class="stop-go"><span class="go-label">택시</span>25분</p>
+          <p class="stop-go"><span class="go-label">시내버스</span>105&middot;105-1 &rarr; <span class="nb"><strong>구성3리</strong>(예식장 앞) 하차</span><br>
+          승차 &mdash; 시외버스정류장 (도보 3분)</p>
+        </li>
+        <li>
+          <p class="stop-head">충주&middot;증평 &mdash; 종점 전 <span class="nb"><strong>북부정류소</strong> 하차</span></p>
+          <p class="stop-go"><span class="go-label">택시</span>15분</p>
+          <p class="stop-go"><span class="go-label">시내버스</span>105&middot;105-1&middot;115-1&middot;119 &rarr; <span class="nb"><strong>구성3리</strong> 하차</span><br>
+          승차 &mdash; 청주대 정류장 (도보 4분)</p>
+        </li>
+        <li>
+          <p class="stop-head">서울남부&middot;인천&middot;유성 &mdash; <span class="nb"><strong>청주공항 정류소</strong> 하차</span></p>
+          <p class="stop-go"><span class="go-label">택시</span>10분</p>
+        </li>
       </ul>
     </div>
   </section>

@@ -927,55 +927,73 @@ body.is-locked { overflow: hidden; }
 .route-list li + li { margin-top: var(--space-2); }
 .route-list strong { font-weight: 400; color: var(--color-text); }
 
-/* 교통 안내 탭 (설계 문서 §5-1 v3.1) — 카드 세로 나열 대신
-   필 세그먼트 3개. 세로 스크롤을 아낍니다. */
+/* 교통 안내 탭 (설계 문서 §5-1 v3.3) — 폴더형 탭, 왼쪽 정렬.
+   첫 탭이 패널 왼쪽 모서리에서 딱 시작하고, 탭은 내용 폭만 차지합니다.
+   활성 탭은 아래 패널 면과 같은 색으로 이어져 한 장의 폴더처럼 보입니다. */
 .venue-tabs {
   display: flex;
+  justify-content: flex-start;
   gap: var(--space-2);
   margin-top: var(--space-5);
 }
 .venue-tab {
-  flex: 1 1 0;
+  flex: 0 1 auto;
   min-height: var(--tap-min);
-  padding: var(--space-2) var(--space-2);
+  margin-top: 6px;             /* 비활성 탭은 살짝 낮게 물러납니다 */
+  padding: var(--space-2) var(--space-4);
   font-size: var(--fs-xs);
   letter-spacing: 0.02em;
   white-space: nowrap;
   color: var(--color-muted-strong);
   background: var(--color-bg);
   border: var(--hairline) solid var(--color-line);
-  border-radius: var(--radius-pill);
+  border-bottom: 0;            /* 패널과 맞닿는 변 — 선 없음 */
+  border-radius: var(--radius-tile) var(--radius-tile) 0 0;
   -webkit-tap-highlight-color: transparent;
-  transition: border-color var(--dur-micro) var(--ease-out),
-              background var(--dur-micro) var(--ease-out),
+  transition: background var(--dur-micro) var(--ease-out),
               color var(--dur-micro) var(--ease-out);
 }
 .venue-tab[aria-selected="true"] {
-  border-color: var(--color-accent);
+  margin-top: 0;
+  min-height: calc(var(--tap-min) + 6px);
   background: var(--color-surface);
+  border-color: var(--color-surface);   /* 패널 면과 한 장으로 이어집니다 */
   color: var(--color-accent);
 }
 
-.venue-panel { margin-top: var(--space-3); }
+.venue-panel {
+  margin-top: 0;
+  border-top-left-radius: 0;   /* 첫 탭과 만나는 모서리 — 폴더 실루엣 */
+}
 
-/* 예식장까지 — 택시/시내버스 인라인 라벨 + 행잉 인덴트 (§5-1 v3.1).
-   라벨을 별도 열로 두면 본문 폭이 줄어 줄바꿈이 과해집니다. */
-.go {
-  margin-top: var(--space-4);
+/* 하차 거점 묶음 (§5-1 v3.2) — 거점 대표 문구 바로 아래에 그 거점의
+   연계(택시·시내버스)를 붙입니다. 거점 사이는 얇은 선으로 구분.
+   라벨은 별도 열 대신 인라인(작고 옅게) — 열을 나누면 375px에서
+   본문 폭이 줄어 줄바꿈이 과해집니다. */
+.stops li + li {
+  margin-top: var(--space-3);
   padding-top: var(--space-3);
   border-top: var(--hairline) solid var(--color-line-faint);
 }
-.go li {
+.stop-head {
   padding-left: 0.9em;
-  text-indent: -0.9em;
+  text-indent: -0.9em;          /* 행잉 인덴트 — route-list 와 동일 */
   font-size: var(--fs-sm);
-  line-height: 1.8;
+  line-height: 1.85;
+  color: var(--color-muted-strong);
+}
+.stops strong { font-weight: 400; color: var(--color-text); }
+.nb { white-space: nowrap; }   /* 역명·정류장명 + "하차" 를 한 덩이로 줄바꿈 */
+/* .venue-card p + p (0,1,2) 를 이기려고 조합 선택자(0,2,0)로 씁니다 */
+.venue-card .stop-go {
+  margin-top: 2px;
+  padding-left: 0.9em;          /* 거점 문구 본문 선에 맞춰 들여쓰기 */
+  font-size: var(--fs-xs);
+  line-height: 1.75;
   color: var(--color-muted-strong);
   font-variant-numeric: lining-nums;
   font-feature-settings: "lnum" 1;
 }
-.go li + li { margin-top: var(--space-3); }
-.go li strong { font-weight: 400; color: var(--color-text); }
 .go-label {
   font-size: var(--fs-xs);
   color: var(--color-muted);

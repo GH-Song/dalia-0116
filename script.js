@@ -425,12 +425,13 @@
     );
 
     /* 숫자 표기는 Cormorant(라틴·숫자 서브셋)가 그립니다.
-       'D - n' 의 글자는 전부 ALWAYS 문자 집합에 있습니다. */
+       'D – n' 의 글자는 전부 ALWAYS 문자 집합에 있습니다.
+       대시는 하이픈이 아니라 엔 대시(–) — Cormorant 하이픈은 기울어 있습니다 (§5-1 v3.2). */
     if (days > 0) {
-      num.textContent = 'D - ' + days;
+      num.textContent = 'D – ' + days;
     } else if (days === 0) {
       lead.textContent = '오늘, 저희 두 사람 결혼합니다';
-      num.textContent  = 'D - DAY';
+      num.textContent  = 'D – DAY';
     } else {
       lead.textContent = '국호 · 은호의 결혼식으로부터';
       num.textContent  = 'D + ' + (-days);
