@@ -39,31 +39,24 @@ def stem_points(x0, y0, ang, length, curve):
 
 def eucalyptus(x0, y0, ang=90, length=60, curve=10, pairs=5,
                leaf=5.2, t_start=0.22, tip=True):
-    """실버달러 유칼립투스 — 둥근 잎이 줄기를 따라 마주납니다."""
+    """유칼립투스 — 둥근 잎이 줄기를 따라 마주납니다."""
     p0, p1, p2 = stem_points(x0, y0, ang, length, curve)
     out = [f'<path d="M{R(p0[0])} {R(p0[1])}Q{R(p1[0])} {R(p1[1])} {R(p2[0])} {R(p2[1])}"/>']
     for i in range(pairs):
         t = t_start + (0.95 - t_start) * (i / max(pairs - 1, 1))
         (cx, cy), tang = qbez(p0, p1, p2, t)
-        # 끝으로 갈수록 잎이 작아집니다
-        s = leaf * (1 - 0.42 * (i / max(pairs - 1, 1)))
+        s_ = leaf * (1 - 0.42 * (i / max(pairs - 1, 1)))
         for side in (+1, -1):
             off = tang + side * 52
             a = math.radians(off)
-            lx = cx + math.cos(a) * s * 0.95
-            ly = cy + math.sin(a) * s * 0.95
-            out.append(
-                f'<ellipse cx="{R(lx)}" cy="{R(ly)}" rx="{R(s)}" ry="{R(s * 0.74)}"'
-                f' transform="rotate({R(off)} {R(lx)} {R(ly)})"/>'
-            )
+            lx = cx + math.cos(a) * s_ * 1.05
+            ly = cy + math.sin(a) * s_ * 1.05
+            out.append(leaf_path(lx, ly, s_ * 2.1, s_ * 0.95, off))
     if tip:
         (tx, ty), tang = qbez(p0, p1, p2, 1.0)
         a = math.radians(tang)
-        out.append(
-            f'<ellipse cx="{R(tx + math.cos(a) * 2.4)}" cy="{R(ty + math.sin(a) * 2.4)}"'
-            f' rx="3" ry="2.2" transform="rotate({R(tang)}'
-            f' {R(tx + math.cos(a) * 2.4)} {R(ty + math.sin(a) * 2.4)})"/>'
-        )
+        out.append(leaf_path(tx + math.cos(a) * 2.6, ty + math.sin(a) * 2.6,
+                             5.6, 2.2, tang))
     return out
 
 
@@ -123,11 +116,31 @@ def cotton(cx, cy, r=9.0, stem_len=18, ang=90, lobes=5):
     return out
 
 
-def group(paths, sw=1.0, opacity=None):
+def group(paths, sw=1.0, opacity=None, fill=None):
+    """fill 을 주면 면이 있는 층, 안 주면 선만 있는 층이 됩니다."""
     o = f' opacity="{opacity}"' if opacity else ""
-    return (f'<g fill="none" stroke="currentColor" stroke-width="{sw}"'
+    f = f'currentColor" fill-opacity="{fill}' if fill else "none"
+    return (f'<g fill="{f}" stroke="currentColor" stroke-width="{sw}"'
             f' stroke-linecap="round" stroke-linejoin="round"{o}>'
             + "".join(paths) + "</g>")
+
+
+def leaf_path(cx, cy, length, width, ang):
+    """끝이 뾰족한 잎 실루엣.
+
+    타원은 잎으로 안 보입니다. 잎은 양 끝이 한 점으로 모이고 가운데가
+    부푼 형태라, 두 개의 이차 베지어를 마주 붙여 만듭니다.
+    """
+    a = math.radians(ang)
+    dx, dy = math.cos(a), math.sin(a)
+    px, py = -dy, dx
+    tipx, tipy = cx + dx * length / 2, cy + dy * length / 2
+    basx, basy = cx - dx * length / 2, cy - dy * length / 2
+    c1x, c1y = cx + px * width, cy + py * width
+    c2x, c2y = cx - px * width, cy - py * width
+    return (f'<path d="M{R(basx)} {R(basy)}'
+            f'Q{R(c1x)} {R(c1y)} {R(tipx)} {R(tipy)}'
+            f'Q{R(c2x)} {R(c2y)} {R(basx)} {R(basy)}Z"/>')
 
 
 def hero_base():
@@ -148,8 +161,9 @@ def hero_base():
     front += pine(228, 96, ang=96, length=40, curve=6, rows=6, needle=8.6)
     return (f'<svg class="botanical botanical-hero" viewBox="0 0 300 96"'
             f' preserveAspectRatio="xMidYMax meet" aria-hidden="true" focusable="false">'
-            + group(back, sw=0.9, opacity="0.5")
-            + group(front, sw=1.1)
+            # 뒤에서 앞으로 3층. 면의 투명도 차이가 깊이를 만듭니다.
+            + group(back, sw=0.8, opacity="0.45", fill="0.10")
+            + group(front, sw=1.0, opacity="0.95", fill="0.16")
             + "</svg>")
 
 

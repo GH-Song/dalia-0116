@@ -105,11 +105,85 @@
      섹션 모듈
      --------------------------------------------------------- */
   /* ---------------------------------------------------------
-     4. 눈 입자 — 히어로 뒤 페이지 전체
-     설계 문서 §7: 아주 옅게, 아주 느리게, 밀도 낮게.
-     색은 theme.css 의 --snow-color 에서 읽어오므로 테마 교체를 따라갑니다.
-     reduced-motion 이면 아예 시작하지 않고, 탭이 가려지면 멈춥니다.
+     4. 눈꽃 · 꽃잎 (설계 문서 §7)
+
+     예전 구현은 단색 원을 뿌렸는데, 작은 원은 그냥 점으로 보여서
+     은은하기는커녕 지저분했습니다. 이제 실제 모양을 그립니다.
+
+       눈꽃  — 육각 대칭 결정. 가지에서 곁가지가 뻗는 구조
+       꽃잎  — 한쪽이 뾰족한 물방울. 떨어지며 천천히 돕니다
+
+     모양은 시작할 때 오프스크린 캔버스에 한 번만 그려두고(스프라이트)
+     매 프레임에는 그 그림을 옮겨 그리기만 합니다. 매번 path 를 새로
+     그리면 저사양 폰에서 프레임이 떨어집니다.
      --------------------------------------------------------- */
+
+  /* 크림색 배경에서는 흰색이 거의 안 보입니다. 눈꽃은 흰색에 가깝게,
+     꽃잎은 팔레트의 sage/목화빛으로 두어 서로 다른 결로 섞이게 합니다. */
+  function cssVar(name, fallback) {
+    var v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    return v || fallback;
+  }
+
+  /** 육각 눈꽃 하나를 스프라이트로 굽습니다. */
+  function makeFlakeSprite(size, color, dpr) {
+    var c = document.createElement('canvas');
+    c.width = c.height = Math.ceil(size * dpr);
+    var x = c.getContext('2d');
+    x.scale(dpr, dpr);
+    x.translate(size / 2, size / 2);
+
+    var r = size / 2 - 1;
+    x.strokeStyle = color;
+    x.lineWidth = Math.max(0.7, size / 22);
+    x.lineCap = 'round';
+    x.beginPath();
+
+    for (var i = 0; i < 6; i++) {
+      var a = (Math.PI / 3) * i;
+      var dx = Math.cos(a), dy = Math.sin(a);
+
+      /* 주가지 */
+      x.moveTo(0, 0);
+      x.lineTo(dx * r, dy * r);
+
+      /* 곁가지 — 뿌리쪽일수록 길게 */
+      for (var k = 0; k < 3; k++) {
+        var t = 0.34 + k * 0.22;          /* 주가지 위 위치 */
+        var len = r * (0.30 - k * 0.07);  /* 곁가지 길이 */
+        var bx = dx * r * t, by = dy * r * t;
+        for (var side = -1; side <= 1; side += 2) {
+          var b = a + side * (Math.PI / 3.1);
+          x.moveTo(bx, by);
+          x.lineTo(bx + Math.cos(b) * len, by + Math.sin(b) * len);
+        }
+      }
+    }
+    x.stroke();
+    return c;
+  }
+
+  /** 꽃잎 하나를 스프라이트로 굽습니다. */
+  function makePetalSprite(size, color, dpr) {
+    var c = document.createElement('canvas');
+    c.width = c.height = Math.ceil(size * dpr);
+    var x = c.getContext('2d');
+    x.scale(dpr, dpr);
+    x.translate(size / 2, size / 2);
+
+    /* 좌우 대칭이면 아몬드처럼 보입니다. 한쪽을 더 부풀리고 끝을 살짝
+       비틀어야 꽃잎처럼 읽힙니다. */
+    var w = size * 0.30, h = size * 0.46;
+    x.fillStyle = color;
+    x.beginPath();
+    x.moveTo(size * 0.04, -h);                                   /* 살짝 기운 끝 */
+    x.bezierCurveTo(w * 1.15, -h * 0.35, w * 0.95, h * 0.62, 0, h);
+    x.bezierCurveTo(-w * 0.80, h * 0.55, -w * 0.72, -h * 0.30, size * 0.04, -h);
+    x.closePath();
+    x.fill();
+    return c;
+  }
+
   function initSnow() {
     var canvas = $('.snow');
     if (!canvas || prefersReducedMotion()) return;
@@ -117,37 +191,59 @@
     var ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    var color = getComputedStyle(document.documentElement)
-                  .getPropertyValue('--snow-color').trim();
-    var flakes = [];
-    var w = 0, h = 0;
-    var raf = null;
-    var last = 0;
+    var flakeColor = cssVar('--snow-flake', 'rgba(255,255,255,0.95)');
+    var petalColor = cssVar('--snow-petal', 'rgba(207,195,180,0.5)');
+
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var sprites = null;
+    var bits = [];
+    var w = 0, h = 0, raf = null, last = 0;
+
+    function bake() {
+      sprites = {
+        flake: [makeFlakeSprite(26, flakeColor, dpr), makeFlakeSprite(18, flakeColor, dpr)],
+        petal: [makePetalSprite(22, petalColor, dpr), makePetalSprite(15, petalColor, dpr)]
+      };
+    }
 
     function seed(n) {
-      flakes = [];
+      bits = [];
       for (var i = 0; i < n; i++) {
-        flakes.push({
+        /* 눈꽃과 꽃잎을 섞습니다. 꽃잎이 조금 더 적어야 겨울로 읽힙니다. */
+        var isFlake = Math.random() < 0.62;
+        var big = Math.random() < 0.4;
+        bits.push({
+          sprite: isFlake ? sprites.flake[big ? 0 : 1] : sprites.petal[big ? 0 : 1],
+          size: (isFlake ? (big ? 26 : 18) : (big ? 22 : 15)) * (0.7 + Math.random() * 0.5),
           x: Math.random() * w,
           y: Math.random() * h,
-          r: 0.7 + Math.random() * 1.6,          /* 반지름 px */
-          vy: 4 + Math.random() * 9,             /* 초당 낙하 px — 아주 느리게 */
-          sway: 6 + Math.random() * 14,          /* 좌우 흔들림 폭 */
+          vy: (isFlake ? 7 : 11) + Math.random() * 12,   /* 초당 낙하 px */
+          sway: 10 + Math.random() * 22,
           phase: Math.random() * Math.PI * 2,
-          rate: 0.15 + Math.random() * 0.25      /* 흔들림 주기 */
+          rate: 0.10 + Math.random() * 0.20,
+          spin: (Math.random() - 0.5) * 0.6,             /* 초당 회전 rad */
+          rot: Math.random() * Math.PI * 2,
+          alpha: 0.45 + Math.random() * 0.5
         });
       }
     }
 
     function resize() {
-      var dpr = Math.min(window.devicePixelRatio || 1, 2);
-      w = canvas.clientWidth;
-      h = canvas.clientHeight;
+      /* 뷰포트 크기를 캔버스 자체 대신 window 에서 읽습니다.
+         레이아웃 타이밍에 따라 clientWidth 가 0 으로 잡히는 경우가 있습니다. */
+      w = window.innerWidth || document.documentElement.clientWidth || 0;
+      h = window.innerHeight || document.documentElement.clientHeight || 0;
+      if (!w || !h) return false;
+
       canvas.width  = Math.round(w * dpr);
       canvas.height = Math.round(h * dpr);
+      canvas.style.width = w + 'px';
+      canvas.style.height = h + 'px';
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      /* 밀도: 화면이 커져도 성기게 유지 */
-      seed(Math.max(10, Math.min(38, Math.round((w * h) / 20000))));
+
+      if (!sprites) bake();
+      seed(Math.max(9, Math.min(26, Math.round((w * h) / 34000))));
+      return true;
     }
 
     function frame(now) {
@@ -155,48 +251,55 @@
       last = now;
 
       ctx.clearRect(0, 0, w, h);
-      ctx.fillStyle = color;
 
-      for (var i = 0; i < flakes.length; i++) {
-        var f = flakes[i];
-        f.y += f.vy * dt;
-        f.phase += f.rate * dt * Math.PI * 2;
-        var x = f.x + Math.sin(f.phase) * f.sway;
+      for (var i = 0; i < bits.length; i++) {
+        var b = bits[i];
+        b.y += b.vy * dt;
+        b.phase += b.rate * dt * Math.PI * 2;
+        b.rot += b.spin * dt;
 
-        if (f.y - f.r > h) {          /* 아래로 나가면 위에서 다시 */
-          f.y = -f.r;
-          f.x = Math.random() * w;
+        if (b.y - b.size > h) {
+          b.y = -b.size;
+          b.x = Math.random() * w;
         }
 
-        ctx.beginPath();
-        ctx.arc(x, f.y, f.r, 0, Math.PI * 2);
-        ctx.fill();
+        var x = b.x + Math.sin(b.phase) * b.sway;
+
+        ctx.save();
+        ctx.globalAlpha = b.alpha;
+        ctx.translate(x, b.y);
+        ctx.rotate(b.rot);
+        ctx.drawImage(b.sprite, -b.size / 2, -b.size / 2, b.size, b.size);
+        ctx.restore();
       }
       raf = requestAnimationFrame(frame);
     }
 
-    function start() { if (raf === null) { last = 0; raf = requestAnimationFrame(frame); } }
+    function start() { if (raf === null && w && h) { last = 0; raf = requestAnimationFrame(frame); } }
     function stop()  { if (raf !== null) { cancelAnimationFrame(raf); raf = null; } }
 
-    resize();
-    start();
+    if (resize()) start();
+    else {
+      /* 레이아웃이 아직이면 다음 프레임에 다시 시도합니다 */
+      requestAnimationFrame(function () { if (resize()) start(); });
+    }
 
     var resizeTimer = null;
     window.addEventListener('resize', function () {
       clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(resize, 200);
+      resizeTimer = setTimeout(function () { if (resize()) start(); }, 200);
     });
 
     document.addEventListener('visibilitychange', function () {
       if (document.hidden) stop(); else start();
     });
 
-    /* 도중에 사용자가 모션 축소로 바꾸면 즉시 끕니다 */
     var onPref = function () {
       if (prefersReducedMotion()) { stop(); ctx.clearRect(0, 0, w, h); canvas.style.display = 'none'; }
     };
     if (reduceMotion.addEventListener) reduceMotion.addEventListener('change', onPref);
   }
+
   /* ---------------------------------------------------------
      5. D-day — 예식일까지 남은 날
      한국은 서머타임이 없어 KST = UTC+9 고정입니다. 하객 기기가
