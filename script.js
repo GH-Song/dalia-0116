@@ -963,10 +963,16 @@
     var loaded = false;
 
     function pad2(n) { return (n < 10 ? '0' : '') + n; }
-    function fmtDate(t) {
+    /* 날짜 + 시각 (§6 v3.4) — 날짜만 있으면 카드가 허전합니다.
+       12시간제 + 오전/오후. 이 문자열은 [data-user-content] 안에서
+       --font-ui(시스템 폰트)로 그려지므로 서브셋 글리프와 무관합니다. */
+    function fmtStamp(t) {
       var d = new Date(t);
       if (isNaN(+d)) return '';
-      return d.getFullYear() + '.' + pad2(d.getMonth() + 1) + '.' + pad2(d.getDate());
+      var h = d.getHours();
+      var h12 = h % 12 || 12;
+      return d.getFullYear() + '.' + pad2(d.getMonth() + 1) + '.' + pad2(d.getDate())
+        + ' ' + (h < 12 ? '오전' : '오후') + ' ' + h12 + ':' + pad2(d.getMinutes());
     }
 
     function setStatus(msg) {
@@ -989,12 +995,22 @@
 
         var head = document.createElement('div');
         head.className = 'gb-item-head';
+        /* 'From' 은 고정 장식 텍스트입니다 — 규칙 3 의 사용자 문자열이 아닙니다.
+           data-face="script" 가 스크립트 서브셋의 스타일 훅이고, 이 글자는
+           tools/subset-fonts.py 의 ALWAYS_SCRIPT 로 서브셋에 고정됩니다. */
+        var from = document.createElement('span');
+        from.className = 'gb-from';
+        from.setAttribute('data-face', 'script');
+        from.setAttribute('aria-hidden', 'true');
+        from.textContent = 'From';
         var name = document.createElement('span');
         name.className = 'gb-item-name';
         name.textContent = it.name;
         var date = document.createElement('span');
         date.className = 'gb-item-date';
-        date.textContent = it.demo ? '미리보기' : fmtDate(it.t);
+        /* 미리보기(엔드포인트 미설정)는 저장되지 않았음을 계속 밝힙니다 */
+        date.textContent = (it.demo ? '미리보기 · ' : '') + fmtStamp(it.t);
+        head.appendChild(from);
         head.appendChild(name);
         head.appendChild(date);
 
@@ -1078,7 +1094,7 @@
 
       if (!hasEndpoint()) {
         /* 아직 시트를 연결하지 않았습니다. 성공한 척하지 않습니다. */
-        items.unshift({ t: null, demo: true, name: name, message: message });
+        items.unshift({ t: new Date().toISOString(), demo: true, name: name, message: message });
         page = 0;                          /* 새 글이 보이는 첫 페이지로 */
         render();
         say('지금은 미리보기라 저장되지 않습니다.', 'demo');

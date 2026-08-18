@@ -35,7 +35,7 @@ def main() -> int:
     hangul = {c for c in need if "가" <= c <= "힣"}
     latin = {c for c in need if ord(c) < 0x2500}
     bold = _ns["collect_face"]("bold")
-    script = _ns["collect_face"]("script") | set("&")
+    script = _ns["collect_face"]("script") | set("&") | set(_ns["ALWAYS_SCRIPT"])
 
     checks = [
         ("NanumMyeongjo-subset.woff2", need,  "한글·기호 전체"),

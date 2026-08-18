@@ -34,6 +34,12 @@ ALWAYS = (
     "남은일지났습니다오늘"
 )
 
+# data-face="script" 마커는 index.html 에서만 수집됩니다(collect_face).
+# script.js 가 만들어 내는 스크립트 고정 텍스트는 마커가 닿지 않으므로
+# 여기에 둡니다 — ALWAYS 와 같은 역할의 스크립트판입니다.
+#   From : 방명록 카드 서명 (§6 v3.4)
+ALWAYS_SCRIPT = "From"
+
 
 def strip_user_content(markup: str) -> str:
     """[data-user-content] 요소의 내용을 통째로 들어냅니다."""
@@ -163,7 +169,7 @@ def main() -> int:
 
     # v2 (설계 문서 §8) — 볼드·스크립트는 data-face 마커 요소의 글자만 담습니다.
     bold = collect_face("bold")
-    script = collect_face("script") | set("&")
+    script = collect_face("script") | set("&") | set(ALWAYS_SCRIPT)
 
     total = 0
     jobs = [
