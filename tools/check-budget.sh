@@ -7,8 +7,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-BUDGET_CODE=35840      # 35 KB — 코드 전송 크기 (v2: 섹션 장식 SVG 인라인 증가)
-BUDGET_FONT=87040      # 85 KB — 서브셋 폰트 4종 (v2: 명조 볼드 + Allura 추가)
+BUDGET_CODE=38912      # 38 KB — 코드 전송 크기 (2026-08-18 재배분: 교통 안내 강화, §10)
+BUDGET_FONT=83968      # 82 KB — 서브셋 폰트 4종 (2026-08-18 재배분: 실측 57.9 KB, §10)
 BUDGET_FIRST=276480    # 270 KB — 첫 화면 소계
 BUDGET_TOTAL=819200    # 800 KB — 전체
 

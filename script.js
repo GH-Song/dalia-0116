@@ -125,17 +125,19 @@
     return v || fallback;
   }
 
-  /** 육각 눈꽃 하나를 스프라이트로 굽습니다. */
-  function makeFlakeSprite(size, color, dpr) {
+  /** 육각 눈꽃 하나를 스프라이트로 굽습니다.
+      음영(shade)을 넓은 밑선으로 먼저 긋고 흰 결정을 위에 얹습니다 —
+      밝은 배경에서는 음영이, 어두운 배경에서는 흰 코어가 대비를 만듭니다. */
+  function makeFlakeSprite(size, color, shade, dpr) {
     var c = document.createElement('canvas');
     c.width = c.height = Math.ceil(size * dpr);
     var x = c.getContext('2d');
     x.scale(dpr, dpr);
     x.translate(size / 2, size / 2);
 
-    var r = size / 2 - 1;
-    x.strokeStyle = color;
-    x.lineWidth = Math.max(0.7, size / 22);
+    /* 음영 밑선이 캔버스에 잘리지 않도록 결정 반지름을 한 뼘 줄입니다 */
+    var r = size / 2 - 2;
+    var core = Math.max(0.7, size / 22);
     x.lineCap = 'round';
     x.beginPath();
 
@@ -159,6 +161,13 @@
         }
       }
     }
+
+    x.strokeStyle = shade;
+    x.lineWidth = core + 1.5;
+    x.stroke();
+
+    x.strokeStyle = color;
+    x.lineWidth = core;
     x.stroke();
     return c;
   }
@@ -191,7 +200,8 @@
     var ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    var flakeColor = cssVar('--snow-flake', 'rgba(255,255,255,0.95)');
+    var flakeColor = cssVar('--snow-flake', '#FFFFFF');
+    var flakeShade = cssVar('--snow-flake-shade', 'rgba(112,74,55,0.38)');
     var petalColor = cssVar('--snow-petal', 'rgba(207,195,180,0.5)');
 
     var dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -201,7 +211,7 @@
 
     function bake() {
       sprites = {
-        flake: [makeFlakeSprite(26, flakeColor, dpr), makeFlakeSprite(18, flakeColor, dpr)],
+        flake: [makeFlakeSprite(26, flakeColor, flakeShade, dpr), makeFlakeSprite(18, flakeColor, flakeShade, dpr)],
         petal: [makePetalSprite(22, petalColor, dpr), makePetalSprite(15, petalColor, dpr)]
       };
     }
@@ -223,8 +233,8 @@
           rate: 0.10 + Math.random() * 0.20,
           spin: (Math.random() - 0.5) * 0.6,             /* 초당 회전 rad */
           rot: Math.random() * Math.PI * 2,
-          /* 글자 위를 지나가므로 진하면 읽기를 방해합니다 (설계 문서 §7 '아주 옅게') */
-          alpha: 0.30 + Math.random() * 0.42
+          /* 글자 위를 지나가므로 진하면 읽기를 방해합니다 (설계 문서 §7 0.40~0.85) */
+          alpha: 0.40 + Math.random() * 0.45
         });
       }
     }

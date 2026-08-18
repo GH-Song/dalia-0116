@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" width="400" height="500" role="img" aria-label="사진 자리">
-<rect width="400" height="500" fill="#F4E9DC"/>
+<rect width="400" height="500" fill="#F6EDE2"/>
 <g fill="none" stroke="#CBAE93" stroke-width="1.4" stroke-linecap="round">
 <circle cx="200" cy="252" r="16"/>
 <path d="M200 226c8 6 8 16 0 26c-8-10-8-20 0-26Z" transform="rotate(35 200 252)"/>

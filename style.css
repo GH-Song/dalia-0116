@@ -728,6 +728,10 @@ option {
 }
 
 .gallery-track {
+  /* 카드 폭(= min(뷰포트, --card-max)) 기준 78%. 양끝 패딩을
+     (카드폭 − 아이템폭)/2 로 잡아 첫 장부터 마지막 장까지
+     스크롤 스냅이 정확히 카드 중앙에 떨어집니다 (설계 문서 §5). */
+  --gallery-item-w: calc(min(100vw, var(--card-max)) * 0.78);
   display: flex;
   gap: var(--space-3);
   overflow-x: auto;
@@ -735,12 +739,12 @@ option {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   margin-inline: calc(var(--side-pad) * -1);
-  padding-inline: var(--side-pad);
+  padding-inline: calc((min(100vw, var(--card-max)) - var(--gallery-item-w)) / 2);
 }
 .gallery-track::-webkit-scrollbar { display: none; }
 
 .gallery-item {
-  flex: 0 0 62%;
+  flex: 0 0 var(--gallery-item-w);
   scroll-snap-align: center;
   padding: 0;
   border-radius: var(--radius-tile);
@@ -928,6 +932,19 @@ body.is-locked { overflow: hidden; }
   color: var(--color-muted-strong);
 }
 .venue-card strong { font-weight: 400; color: var(--color-text); }
+
+/* 카드 하단 각주 — 소요시간·요금 같은 참조 정보.
+   본문(추천 경로)보다 한 단계 작고 옅게, 얇은 선으로 구분합니다.
+   p 를 붙여 (0,2,1) — 위 `.venue-card > p:last-child` 와 동률을 만들고
+   뒤에 선언해 이깁니다. */
+.venue-card p.venue-card-note {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-line-faint);
+  font-size: var(--fs-xs);
+  line-height: 1.7;
+  color: var(--color-muted);
+}
 
 .venue-note {
   margin-top: var(--space-5);
