@@ -319,28 +319,22 @@
     if (!box) return;
     var lead = $('[data-dday-lead]', box);
     var num  = $('[data-dday-num]', box);
-    var tail = $('[data-dday-tail]', box);
-    if (!lead || !num || !tail) return;
+    if (!lead || !num) return;
 
     var days = Math.round(
       (kstMidnight(Date.parse(WEDDING_ISO)) - kstMidnight(Date.now())) / 86400000
     );
 
+    /* 숫자 표기는 Cormorant(라틴·숫자 서브셋)가 그립니다.
+       'D - n' 의 글자는 전부 ALWAYS 문자 집합에 있습니다. */
     if (days > 0) {
-      lead.textContent = '예식일까지';
-      num.textContent  = String(days);
-      tail.textContent = '일 남았습니다';
-      num.hidden = false;
+      num.textContent = 'D - ' + days;
     } else if (days === 0) {
-      lead.textContent = '오늘, 예식일입니다';
-      num.textContent  = '';
-      tail.textContent = '';
-      num.hidden = true;
+      lead.textContent = '오늘, 저희 두 사람 결혼합니다';
+      num.textContent  = 'D - DAY';
     } else {
-      lead.textContent = '예식일로부터';
-      num.textContent  = String(-days);
-      tail.textContent = '일 지났습니다';
-      num.hidden = false;
+      lead.textContent = '국호 · 은호의 결혼식으로부터';
+      num.textContent  = 'D + ' + (-days);
     }
   }
 

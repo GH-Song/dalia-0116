@@ -1,55 +1,62 @@
 /* =============================================================
    theme.css — 팔레트 단일 소유 파일
-   테마: 온실 (Winter Garden)
+   테마: 동백 (Camellia — 따뜻한 겨울)
 
    이 파일이 이 프로젝트에서 색상 리터럴을 담는 유일한 파일입니다.
    style.css 에는 리터럴이 0개여야 하며 CI가 이를 강제합니다.
-   테마 교체 = 이 파일 통째로 교체 (2026-10, 사진 수령 후 결정).
+   테마 교체 = 이 파일 통째로 교체 (2026-10, 사진 수령 후 최종 결정).
+   이전 테마(온실·설야) 팔레트는 설계 문서 §7에 기록되어 있습니다.
 
    대비 실측 (WCAG 2.1, --color-bg 기준):
-     text          11.9:1  ✓ AA/AAA 본문
-     accent         8.1:1  ✓ AA/AAA 본문·액션
-     muted-strong   4.9:1  ✓ AA 본문 — 작은 글씨는 반드시 이것
-     muted          3.5:1  ✗ 본문 불가. 큰 글씨(18.66px+)·장식 전용
-     primary        3.1:1  ✗ 본문 불가. 선·아이콘·큰 글씨 전용
+     text          11.97:1  ✓ AA/AAA 본문
+     accent         6.14:1  ✓ AA 본문·액션 (accent 위 on-accent 도 6.14)
+     muted-strong   5.15:1  ✓ AA 본문 — 작은 글씨는 반드시 이것
+     primary        3.34:1  ✗ 본문 불가. 선·아이콘·큰 글씨(18.66px+) 전용
+     gold           3.22:1  ✗ 장식·헤어라인 전용
+     muted          3.23:1  ✗ 본문 불가. 큰 글씨·장식 전용
+   surface 위에서도 text 10.8 / accent 5.6 / muted-strong 4.7 로 성립.
    테마를 교체할 때 이 표를 다시 실측하세요.
    ============================================================= */
 
 :root {
-  /* --- 팔레트 (설계 문서 §7) --- */
-  --color-bg:            #F5F4EF;  /* 페이지 베이스 — 온실 안의 빛 */
-  --color-surface:       #E5E6DC;  /* 카드·섹션 분리 */
-  --color-secondary:     #CFC3B4;  /* 마른 목화빛 보조 */
-  --color-primary:       #7F9078;  /* winter sage — 강조 */
-  --color-accent:        #3F4E3C;  /* deep pine — 액션 */
-  --color-text:          #2C322C;
-  --color-muted:         #7E8579;
+  /* --- 팔레트 (설계 문서 §7 v2) --- */
+  --color-bg:            #FBF5EC;  /* 샴페인 아이보리 — 페이지 베이스 */
+  --color-surface:       #F4E9DC;  /* 웜 리넨 — 카드·섹션 분리 */
+  --color-secondary:     #E9CDBD;  /* 블러시 — 장식 보조 */
+  --color-primary:       #BA7561;  /* 더스티 코랄 — 선·아이콘·큰 글씨 */
+  --color-accent:        #8A4B3D;  /* 로즈우드 — 액션·강조 */
+  --color-text:          #3D2E27;  /* 웜 에스프레소 */
+  --color-muted:         #97867A;
 
   /* --- 파생 토큰 --- */
   /* 본문 크기 보조 텍스트. muted 는 대비 미달이라 이걸 씁니다. */
-  --color-muted-strong:  #666D62;
+  --color-muted-strong:  #75655A;
 
-  /* 유리온실 glazing bar — 선 3단계 */
-  --color-line-faint:    #DBDED5;  /* 표·구분선 */
-  --color-line:          #C0C7B9;  /* 기본 헤어라인 */
-  --color-line-strong:   #A8B3A2;  /* 프레임·강조 테두리 */
+  /* 장식 전용 두 색 — 본문 텍스트 금지 */
+  --color-gold:          #A8834B;  /* 앤티크 골드 — 헤어라인·오너먼트 */
+  --color-leaf:          #9C9468;  /* 웜 올리브 — 플로럴 잎 전용 */
+
+  /* 선 3단계 — 웜 린넨 결 */
+  --color-line-faint:    #F0E4D4;  /* 표·구분선 */
+  --color-line:          #E2CFBA;  /* 기본 헤어라인 */
+  --color-line-strong:   #CBAE93;  /* 프레임·강조 테두리 */
 
   /* 면 */
-  --color-field-bg:      #FCFCF9;  /* 입력 필드 */
-  --color-on-accent:     #F5F4EF;  /* accent 위 글자 */
-  --color-danger:        #8C4A3F;  /* 폼 오류 — 6.0:1 */
+  --color-field-bg:      #FEFBF6;  /* 입력 필드 */
+  --color-on-accent:     #FBF5EC;  /* accent 위 글자 */
+  --color-danger:        #A03B2A;  /* 폼 오류 — 6.1:1 */
 
   /* 오버레이 */
-  --color-scrim:         rgba(44, 50, 44, 0.88);   /* 라이트박스 */
-  --color-press:         rgba(63, 78, 60, 0.07);   /* 탭 피드백 */
-  --shadow-card:         0 1px 2px rgba(44, 50, 44, 0.04),
-                         0 10px 28px rgba(44, 50, 44, 0.06);
-  --shadow-lift:         0 2px 6px rgba(44, 50, 44, 0.08),
-                         0 16px 40px rgba(44, 50, 44, 0.10);
+  --color-scrim:         rgba(61, 46, 39, 0.9);    /* 라이트박스 */
+  --color-press:         rgba(138, 75, 61, 0.08);  /* 탭 피드백 */
+  --shadow-card:         0 1px 2px rgba(112, 74, 55, 0.05),
+                         0 12px 32px rgba(112, 74, 55, 0.09);
+  --shadow-lift:         0 2px 6px rgba(112, 74, 55, 0.10),
+                         0 18px 44px rgba(112, 74, 55, 0.14);
 
   /* 눈꽃 · 꽃잎 — 두 결을 섞어 내립니다.
-     눈꽃은 크림 배경보다 밝아야 결정으로 읽히므로 흰색,
-     꽃잎은 마른 목화빛이라 눈꽃과 색으로 구분됩니다. */
+     눈꽃은 아이보리보다 밝은 흰색이라 결정으로 읽히고,
+     꽃잎은 블러시라 눈꽃과 색으로 구분됩니다. */
   --snow-flake:          rgba(255, 255, 255, 0.95);
-  --snow-petal:          rgba(198, 184, 168, 0.55);
+  --snow-petal:          rgba(233, 183, 166, 0.62);
 }

@@ -45,6 +45,23 @@ def strip_user_content(markup: str) -> str:
     )
 
 
+def collect_face(face: str) -> set:
+    """data-face="bold|script" 요소의 문자만 수집합니다 (설계 문서 §8 v2).
+
+    이 속성은 style.css 의 폰트 지정 셀렉터이기도 해서, 마커 없이는
+    해당 폰트가 적용되지 않습니다 — 스타일과 서브셋이 어긋날 수 없습니다.
+    """
+    markup = strip_user_content((ROOT / "index.html").read_text(encoding="utf-8"))
+    markup = re.sub(r"<!--.*?-->", " ", markup, flags=re.S)
+    chars = set()
+    for m in re.finditer(
+        rf'<(\w+)[^>]*\bdata-face="{face}"[^>]*>(.*?)</\1>', markup, re.S | re.I
+    ):
+        inner = re.sub(r"<[^>]+>", " ", m.group(2))
+        chars |= set(html.unescape(inner))
+    return {c for c in chars if c.isprintable() and not c.isspace()}
+
+
 def text_from_html(path: pathlib.Path) -> str:
     s = path.read_text(encoding="utf-8")
     s = re.sub(r"<!--.*?-->", " ", s, flags=re.S)
@@ -77,16 +94,22 @@ def collect() -> set:
 
 
 # 원본 폰트는 저장소에 넣지 않습니다 (빌드 산출물). 없으면 받아옵니다.
-# 둘 다 OFL 이라 서브셋 재배포가 허용됩니다.
+# 전부 OFL 이라 서브셋 재배포가 허용됩니다.
 FONT_SOURCES = {
     "NanumMyeongjo-Regular.ttf":
         "https://raw.githubusercontent.com/google/fonts/main/ofl/nanummyeongjo/NanumMyeongjo-Regular.ttf",
+    "NanumMyeongjo-Bold.ttf":
+        "https://raw.githubusercontent.com/google/fonts/main/ofl/nanummyeongjo/NanumMyeongjo-Bold.ttf",
     "CormorantGaramond[wght].ttf":
         "https://raw.githubusercontent.com/google/fonts/main/ofl/cormorantgaramond/CormorantGaramond%5Bwght%5D.ttf",
+    "Allura-Regular.ttf":
+        "https://raw.githubusercontent.com/google/fonts/main/ofl/allura/Allura-Regular.ttf",
     "OFL-NanumMyeongjo.txt":
         "https://raw.githubusercontent.com/google/fonts/main/ofl/nanummyeongjo/OFL.txt",
     "OFL-CormorantGaramond.txt":
         "https://raw.githubusercontent.com/google/fonts/main/ofl/cormorantgaramond/OFL.txt",
+    "OFL-Allura.txt":
+        "https://raw.githubusercontent.com/google/fonts/main/ofl/allura/OFL.txt",
 }
 
 
@@ -138,11 +161,17 @@ def main() -> int:
 
     print(f"수집한 문자 {len(chars)}자 (한글 {len(hangul)}, 라틴·기호 {len(latin)})")
 
+    # v2 (설계 문서 §8) — 볼드·스크립트는 data-face 마커 요소의 글자만 담습니다.
+    bold = collect_face("bold")
+    script = collect_face("script") | set("&")
+
     total = 0
     jobs = [
         # (원본, 결과물, 문자집합, 가변축 고정값)
         ("NanumMyeongjo-Regular.ttf", "NanumMyeongjo-subset.woff2", chars, None),
+        ("NanumMyeongjo-Bold.ttf", "NanumMyeongjoBold-subset.woff2", bold, None),
         ("CormorantGaramond[wght].ttf", "CormorantGaramond-subset.woff2", latin, "wght=400"),
+        ("Allura-Regular.ttf", "Allura-subset.woff2", script, None),
     ]
     for src_name, dst_name, cs, axes in jobs:
         src = SRC / src_name
@@ -155,7 +184,7 @@ def main() -> int:
         total += size
         print(f"  {dst_name:38s} {size:7,d} B  ({len(cs)}자)")
 
-    budget = 60 * 1024
+    budget = 85 * 1024
     print(f"\n폰트 합계 {total:,} B / 예산 {budget:,} B "
           f"({'OK' if total <= budget else '초과!'})")
     return 0 if total <= budget else 1

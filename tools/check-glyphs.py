@@ -34,10 +34,14 @@ def main() -> int:
     need = _ns["collect"]()
     hangul = {c for c in need if "가" <= c <= "힣"}
     latin = {c for c in need if ord(c) < 0x2500}
+    bold = _ns["collect_face"]("bold")
+    script = _ns["collect_face"]("script") | set("&")
 
     checks = [
         ("NanumMyeongjo-subset.woff2", need,  "한글·기호 전체"),
+        ("NanumMyeongjoBold-subset.woff2", bold, "볼드 표시 텍스트"),
         ("CormorantGaramond-subset.woff2", latin, "라틴·숫자"),
+        ("Allura-subset.woff2", script, "스크립트 악센트"),
     ]
 
     failed = False
