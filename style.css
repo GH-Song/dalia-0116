@@ -895,12 +895,7 @@ body.is-locked { overflow: hidden; }
   color: var(--color-muted-strong);
 }
 
-/* 안내 카드 */
-.venue-cards {
-  display: grid;
-  gap: var(--space-3);
-  margin-top: var(--space-6);
-}
+/* 안내 카드 면 — 탭 패널이 재사용합니다 */
 .venue-card {
   background: var(--color-surface);
   border-radius: var(--radius-tile);
@@ -932,35 +927,60 @@ body.is-locked { overflow: hidden; }
 .route-list li + li { margin-top: var(--space-2); }
 .route-list strong { font-weight: 400; color: var(--color-text); }
 
-/* 거점 → 예식장 표 (설계 문서 §5-1) — 이 섹션의 핵심 전달물.
-   "여기 내리면 몇 분·얼마"가 행 단위로 한눈에 잡혀야 합니다. */
-.hub-head {
+/* 교통 안내 탭 (설계 문서 §5-1 v3.1) — 카드 세로 나열 대신
+   필 세그먼트 3개. 세로 스크롤을 아낍니다. */
+.venue-tabs {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-3);
+  gap: var(--space-2);
+  margin-top: var(--space-5);
 }
-.hub-unit {
-  flex-shrink: 0;
+.venue-tab {
+  flex: 1 1 0;
+  min-height: var(--tap-min);
+  padding: var(--space-2) var(--space-2);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  color: var(--color-muted-strong);
+  background: var(--color-bg);
+  border: var(--hairline) solid var(--color-line);
+  border-radius: var(--radius-pill);
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color var(--dur-micro) var(--ease-out),
+              background var(--dur-micro) var(--ease-out),
+              color var(--dur-micro) var(--ease-out);
+}
+.venue-tab[aria-selected="true"] {
+  border-color: var(--color-accent);
+  background: var(--color-surface);
+  color: var(--color-accent);
+}
+
+.venue-panel { margin-top: var(--space-3); }
+
+/* 예식장까지 — 택시/시내버스 인라인 라벨 + 행잉 인덴트 (§5-1 v3.1).
+   라벨을 별도 열로 두면 본문 폭이 줄어 줄바꿈이 과해집니다. */
+.go {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: var(--hairline) solid var(--color-line-faint);
+}
+.go li {
+  padding-left: 0.9em;
+  text-indent: -0.9em;
+  font-size: var(--fs-sm);
+  line-height: 1.8;
+  color: var(--color-muted-strong);
+  font-variant-numeric: lining-nums;
+  font-feature-settings: "lnum" 1;
+}
+.go li + li { margin-top: var(--space-3); }
+.go li strong { font-weight: 400; color: var(--color-text); }
+.go-label {
   font-size: var(--fs-xs);
   color: var(--color-muted);
   letter-spacing: 0.05em;
-}
-.hub-list li {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding-block: var(--space-2);
-}
-.hub-list li + li { border-top: var(--hairline) solid var(--color-line-faint); }
-.hub-from { font-size: var(--fs-sm); }
-.hub-val {
-  flex-shrink: 0;
-  font-size: var(--fs-sm);
-  color: var(--color-muted-strong);
-  font-variant-numeric: lining-nums tabular-nums;
-  font-feature-settings: "lnum" 1, "tnum" 1;
+  margin-right: 0.6em;
 }
 
 /* 카드 하단 각주 — 소요시간·요금 같은 참조 정보.
@@ -1245,7 +1265,38 @@ body.is-locked { overflow: hidden; }
   overflow-wrap: anywhere;   /* 긴 이모지·URL 이 카드 밖으로 새지 않게 */
 }
 
-.gb-more { width: 100%; margin-top: var(--space-4); }
+/* 페이지 넘김 — 상위 3개만 보여주고 ‹ › 로 넘깁니다 (§6 v3.1) */
+.gb-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-5);
+  margin-top: var(--space-4);
+}
+.gb-page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  border: var(--hairline) solid var(--color-line);
+  border-radius: 50%;
+  color: var(--color-accent);
+  background: var(--color-bg);
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color var(--dur-micro) var(--ease-out);
+}
+.gb-page-btn:not(:disabled):active { border-color: var(--color-accent); }
+.gb-page-btn:disabled { color: var(--color-line); border-color: var(--color-line-faint); cursor: default; }
+.gb-page-num {
+  min-width: 3.5em;
+  text-align: center;
+  font-family: var(--font-en);
+  font-variant-numeric: lining-nums tabular-nums;
+  font-size: var(--fs-sm);
+  letter-spacing: 0.08em;
+  color: var(--color-muted-strong);
+}
 
 /* =============================================================
    21-2. 첫 방문 참석 의사 팝업 (설계 문서 §6 v3)

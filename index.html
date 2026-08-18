@@ -284,59 +284,7 @@
       <button class="btn map-btn" type="button" data-map="tmap">T map</button>
     </div>
 
-    <!-- 교통 카드 — 설계 문서 §5-1 (v3). 소요시간·택시비는 2026-08
-         카카오맵 실측을 천 원 단위로 반올림한 값이고 배포 전 재확인합니다(§16).
-         출발지 서술 대신 도착 거점 기준. 택시·시내버스 정보는
-         아래 '내리신 곳에서 예식장까지' 표 한 곳에만 둡니다. -->
-    <div class="venue-cards">
-      <article class="venue-card">
-        <p class="venue-card-title" data-face="bold">자가용 &middot; 주차</p>
-        <ul class="route-list">
-          <li>내비게이션 &mdash; <strong>메리다웨딩컨벤션</strong> 검색</li>
-          <li>주차 &mdash; <strong>웨딩홀 자체 주차장</strong> 무료</li>
-        </ul>
-        <p class="venue-card-note">주차 약 1,500대 &middot; 예상 소요 &mdash;
-        서울&middot;인천 약 2시간, 대전 약 1시간, 부산 약 3시간 30분,
-        충주 약 50분, 청주 시내 20~30분</p>
-      </article>
-
-      <article class="venue-card">
-        <p class="venue-card-title" data-face="bold">기차</p>
-        <ul class="route-list">
-          <li>서울&middot;수도권&middot;부산 &mdash; KTX&middot;SRT <strong>오송역</strong> 하차</li>
-          <li>대전&middot;충청 &mdash; ITX&middot;무궁화 <strong>청주공항역</strong> 하차</li>
-        </ul>
-      </article>
-
-      <article class="venue-card">
-        <p class="venue-card-title" data-face="bold">고속 &middot; 시외버스</p>
-        <ul class="route-list">
-          <li>전국 대부분 노선 &mdash; <strong>청주터미널</strong>(가경동) 하차</li>
-          <li>충주&middot;증평 &mdash; 종점 전 <strong>북부정류소</strong> 하차</li>
-        </ul>
-        <p class="venue-card-note">서울남부&middot;인천&middot;유성 일부 노선은
-        청주공항까지 옵니다 &mdash; 예매 앱에 보이면 예식장에서 가장 가깝습니다</p>
-      </article>
-
-      <article class="venue-card venue-hub">
-        <div class="hub-head">
-          <p class="venue-card-title" data-face="bold">내리신 곳에서 예식장까지</p>
-          <span class="hub-unit">택시 기준</span>
-        </div>
-        <ul class="hub-list">
-          <li><span class="hub-from">오송역</span><span class="hub-val">25분 &middot; 29,000원</span></li>
-          <li><span class="hub-from">청주공항 &middot; 공항역</span><span class="hub-val">15분 &middot; 14,000원</span></li>
-          <li><span class="hub-from">오근장역</span><span class="hub-val">10분 &middot; 10,000원</span></li>
-          <li><span class="hub-from">청주터미널</span><span class="hub-val">25분 &middot; 17,000원</span></li>
-          <li><span class="hub-from">북부정류소</span><span class="hub-val">15분 &middot; 10,000원</span></li>
-        </ul>
-        <p class="venue-card-note">시내버스 105&middot;105-1 &mdash; 예식장 앞
-        구성3리 하차, 배차 10분 남짓<br>
-        승차 &mdash; 청주터미널 시외버스정류장(도보 3분) &middot;
-        북부정류소 청주대 정류장(도보 4분)</p>
-      </article>
-    </div>
-
+    <!-- 겨울 주의 — 수단 선택보다 먼저 읽혀야 합니다 (설계 문서 §5-1 v3.1) -->
     <p class="venue-note">
       <svg class="note-flake" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
         <g fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round">
@@ -349,6 +297,51 @@
       1월 예식이라 도로가 얼거나 눈이 올 수 있습니다.<br>
       시간을 넉넉히 두고 출발해 주세요.
     </p>
+
+    <!-- 교통 안내 탭 — 설계 문서 §5-1 v3.1. 카드 세로 나열 대신 탭 3개.
+         소요시간은 2026-08 카카오맵 실측 반올림(배포 전 재확인 §16),
+         요금은 싣지 않습니다(사용자 결정 — 시간만). -->
+    <div class="venue-tabs" role="tablist" aria-label="오시는 방법">
+      <button class="venue-tab" type="button" role="tab" id="vtab-car"
+              aria-controls="vpanel-car" aria-selected="true">자가용&middot;주차</button>
+      <button class="venue-tab" type="button" role="tab" id="vtab-train"
+              aria-controls="vpanel-train" aria-selected="false">기차</button>
+      <button class="venue-tab" type="button" role="tab" id="vtab-bus"
+              aria-controls="vpanel-bus" aria-selected="false">고속&middot;시외버스</button>
+    </div>
+
+    <div class="venue-card venue-panel" role="tabpanel" id="vpanel-car" aria-labelledby="vtab-car">
+      <ul class="route-list">
+        <li>내비게이션 &mdash; <strong>메리다웨딩컨벤션</strong> 검색</li>
+        <li>주차 &mdash; <strong>웨딩홀 자체 무료 주차장</strong> (1,500대)</li>
+      </ul>
+      <p class="venue-card-note">예상 소요 &mdash; 서울&middot;인천 약 2시간,
+      대전 약 1시간, 부산 약 3시간 30분, 충주 약 50분, 청주 시내 20~30분</p>
+    </div>
+
+    <div class="venue-card venue-panel" role="tabpanel" id="vpanel-train" aria-labelledby="vtab-train" hidden>
+      <ul class="route-list">
+        <li>서울&middot;수도권&middot;부산 &mdash; KTX&middot;SRT <strong>오송역</strong> 하차</li>
+        <li>대전&middot;충청 &mdash; ITX&middot;무궁화 <strong>청주공항역</strong> 하차</li>
+      </ul>
+      <ul class="go">
+        <li><span class="go-label">택시</span>오송역 25분 &middot; 청주공항역 15분 &middot; 오근장역 10분</li>
+      </ul>
+    </div>
+
+    <div class="venue-card venue-panel" role="tabpanel" id="vpanel-bus" aria-labelledby="vtab-bus" hidden>
+      <ul class="route-list">
+        <li>전국 대부분 노선 &mdash; <strong>청주터미널</strong>(가경동) 하차</li>
+        <li>충주&middot;증평 &mdash; 종점 전 <strong>북부정류소</strong> 하차</li>
+        <li>서울남부&middot;인천&middot;유성 일부 &mdash; <strong>청주공항</strong>행이 가장 가깝습니다</li>
+      </ul>
+      <ul class="go">
+        <li><span class="go-label">택시</span>청주터미널 25분 &middot; 북부정류소 15분 &middot; 청주공항 10분</li>
+        <li><span class="go-label">시내버스</span>105&middot;105-1 &rarr; <strong>구성3리</strong>(예식장 앞) 하차 &middot; 배차 10분 남짓<br>
+        승차 &mdash; 청주터미널 시외버스정류장(도보 3분) &middot;
+        북부정류소 청주대 정류장(도보 4분, 115-1&middot;119도 정차)</li>
+      </ul>
+    </div>
   </section>
 
   <div class="divider-wrap reveal"><svg class="flora flora-divider" viewBox="0 0 260 40" aria-hidden="true" focusable="false"><g class="flora-stamen"><path fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.55" d="M6 20H64M196 20H254"/><circle cx="6" cy="20" r="1.2"/><circle cx="254" cy="20" r="1.2"/></g><g class="flora-leaf" fill="currentColor"><path fill="none" stroke="currentColor" stroke-width="0.9" opacity="0.55" d="M118 20Q96 19 74 20"/><path opacity="0.34" d="M110 20Q109 14 104 13Q104 18 110 20ZM74 20Q74 17 71 16Q71 19 74 20ZM74 20Q71 22 72 26Q75 24 74 20Z"/><path fill="none" stroke="currentColor" stroke-width="0.55" opacity="0.38" d="M110 20L105 14M75 20L72 16M75 20L72 25"/><path fill="none" stroke="currentColor" stroke-width="0.9" opacity="0.55" d="M142 20Q164 19 186 20"/><path opacity="0.34" d="M150 20Q156 18 156 13Q151 14 150 20ZM168 20Q168 24 172 26Q172 22 168 20ZM168 20Q173 18 172 12Q168 14 168 20ZM186 20Q185 25 189 26Q189 22 186 20ZM186 20Q189 19 189 16Q186 17 186 20Z"/><path fill="none" stroke="currentColor" stroke-width="0.55" opacity="0.38" d="M150 20L155 14M168 20L171 25M168 20L172 14M185 20L189 25M185 20L189 17"/></g><g class="flora-bloom" fill="currentColor"><path opacity="0.3" stroke="currentColor" stroke-width="0.5" stroke-opacity="0.5" d="M130 22C127 23 126 30 130 30C134 30 133 23 130 22ZM128 21C125 19 118 24 121 27C124 30 129 24 128 21ZM127 19C126 16 118 15 119 19C118 23 126 22 127 19ZM128 17C129 14 124 8 122 11C119 13 125 18 128 17ZM130 16C133 15 134 7 130 7C126 7 127 15 130 16ZM132 17C135 18 141 13 138 10C135 7 130 14 132 17ZM133 19C134 22 142 22 141 19C141 15 134 16 133 19ZM132 21C130 24 135 31 138 28C141 25 135 20 132 21Z"/><path opacity="0.44" d="M129 21C127 20 123 25 126 27C129 28 131 22 129 21ZM128 19C128 17 122 16 122 19C122 22 127 21 128 19ZM129 17C131 16 129 10 126 12C123 13 126 18 129 17ZM131 17C134 18 137 13 134 11C131 10 129 16 131 17ZM132 19C133 21 139 22 139 19C139 16 133 17 132 19ZM131 21C129 23 131 29 134 27C138 25 134 20 131 21Z"/><path opacity="0.58" d="M129 19C128 18 124 19 125 21C126 23 129 21 129 19ZM129 18C130 17 128 13 127 15C125 16 128 19 129 18ZM131 18C132 19 135 16 133 15C131 13 130 17 131 18ZM131 19C131 21 135 23 135 20C136 18 132 18 131 19ZM130 20C128 20 128 24 130 24C132 24 132 20 130 20Z"/></g><g class="flora-stamen" fill="currentColor"><circle cx="130" cy="19" r="0.8"/><circle cx="132" cy="19" r="0.5"/><circle cx="131" cy="20" r="0.5"/><circle cx="129" cy="21" r="0.5"/><circle cx="128" cy="19" r="0.5"/><circle cx="129" cy="17" r="0.5"/><circle cx="131" cy="18" r="0.5"/></g></svg></div>
@@ -471,12 +464,7 @@
         <p class="count-total" data-count-total aria-live="polite">모두 2분 참석</p>
       </div>
 
-      <div class="field">
-        <label class="field-label" for="rsvp-msg">전하고 싶은 말 <span class="opt">(선택)</span></label>
-        <input class="input" id="rsvp-msg" name="message" type="text" maxlength="60"
-               placeholder="한 줄 남겨 주세요">
-      </div>
-
+      <!-- '전하고 싶은 말'은 방명록이 생기며 제거 (설계 문서 §6 v3.1) -->
       <button class="btn btn-solid rsvp-submit" type="submit">참석 여부 보내기</button>
 
       <!-- 규칙 3 최대 위험 지점 — 하객 이름이 그대로 들어갑니다 -->
@@ -509,7 +497,19 @@
     <div class="gb-book" data-rv="4">
       <p class="gb-status" data-gb-status>메시지를 불러오는 중입니다&hellip;</p>
       <ul class="gb-list" data-gb-list data-user-content hidden></ul>
-      <button class="btn gb-more" type="button" data-gb-more hidden>메시지 더 보기</button>
+      <div class="gb-pager" data-gb-pager hidden>
+        <button class="gb-page-btn" type="button" data-gb-prev aria-label="이전 메시지">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
+            <path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <span class="gb-page-num" data-gb-page aria-live="polite"></span>
+        <button class="gb-page-btn" type="button" data-gb-next aria-label="다음 메시지">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
+            <path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
     </div>
   </section>
 

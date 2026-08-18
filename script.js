@@ -668,6 +668,22 @@
     });
   }
 
+  /* 교통 안내 탭 — 자가용·주차 / 기차 / 고속·시외버스 (설계 문서 §5-1 v3.1) */
+  function initVenueTabs() {
+    var tabs = $$('.venue-tab');
+    if (!tabs.length) return;
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        tabs.forEach(function (t) {
+          var on = t === tab;
+          t.setAttribute('aria-selected', on ? 'true' : 'false');
+          var panel = document.getElementById(t.getAttribute('aria-controls'));
+          if (panel) panel.hidden = !on;
+        });
+      });
+    });
+  }
+
   /* ---------------------------------------------------------
      8. 계좌 복사
      은행명은 빼고 번호만 복사합니다. 뱅킹 앱에 그대로 붙일 수 있어야 합니다.
@@ -862,7 +878,8 @@
         attending:  going,
         meal_count: yes ? state.meal : 0,
         gift_count: yes ? state.gift : 0,
-        message:    $('#rsvp-msg', form).value.trim()
+        /* '전하고 싶은 말'은 방명록으로 이동 (§6 v3.1) — 시트 열은 유지 */
+        message:    ''
       };
 
       var ok = name + '님, 참석 여부를 받았습니다. 고맙습니다.';
@@ -932,13 +949,16 @@
     if (!section || !form || !list) return;
 
     var statusEl = $('[data-gb-status]');
-    var moreBtn = $('[data-gb-more]');
+    var pager = $('[data-gb-pager]');
+    var prevBtn = $('[data-gb-prev]');
+    var nextBtn = $('[data-gb-next]');
+    var pageEl = $('[data-gb-page]');
     var resultEl = $('[data-gb-result]', form);
     var submitBtn = $('.gb-submit', form);
 
-    var SHOW = 5;             /* 처음 보여줄 개수 */
+    var PER_PAGE = 3;         /* 한 번에 보여줄 개수 — 나머지는 넘겨서 (§6 v3.1) */
     var items = [];           /* {t, name, message, demo} 최신순 */
-    var expanded = false;
+    var page = 0;
     var loaded = false;
 
     function pad2(n) { return (n < 10 ? '0' : '') + n; }
@@ -956,8 +976,12 @@
 
     function render() {
       list.textContent = '';        /* 비우기 — innerHTML 금지 */
-      var n = expanded ? items.length : Math.min(SHOW, items.length);
-      for (var i = 0; i < n; i++) {
+      var pages = Math.max(1, Math.ceil(items.length / PER_PAGE));
+      if (page > pages - 1) page = pages - 1;
+      if (page < 0) page = 0;
+      var start = page * PER_PAGE;
+      var end = Math.min(items.length, start + PER_PAGE);
+      for (var i = start; i < end; i++) {
         var it = items[i];
         var li = document.createElement('li');
         li.className = 'gb-item';
@@ -985,10 +1009,12 @@
       setStatus(items.length === 0
         ? '아직 남겨진 메시지가 없습니다. 첫 번째 축하를 남겨 주세요.'
         : '');
-      if (moreBtn) {
-        moreBtn.hidden = expanded || items.length <= SHOW;
-        if (!moreBtn.hidden) {
-          moreBtn.textContent = '메시지 더 보기 (' + (items.length - SHOW) + ')';
+      if (pager) {
+        pager.hidden = items.length <= PER_PAGE;
+        if (!pager.hidden) {
+          pageEl.textContent = (page + 1) + ' / ' + pages;
+          prevBtn.disabled = page === 0;
+          nextBtn.disabled = page >= pages - 1;
         }
       }
     }
@@ -1026,11 +1052,9 @@
       load();
     }
 
-    if (moreBtn) {
-      moreBtn.addEventListener('click', function () {
-        expanded = true;
-        render();
-      });
+    if (prevBtn && nextBtn) {
+      prevBtn.addEventListener('click', function () { page -= 1; render(); });
+      nextBtn.addEventListener('click', function () { page += 1; render(); });
     }
 
     function say(message, state_) {
@@ -1054,6 +1078,7 @@
       if (!hasEndpoint()) {
         /* 아직 시트를 연결하지 않았습니다. 성공한 척하지 않습니다. */
         items.unshift({ t: null, demo: true, name: name, message: message });
+        page = 0;                          /* 새 글이 보이는 첫 페이지로 */
         render();
         say('지금은 미리보기라 저장되지 않습니다.', 'demo');
         form.reset();
@@ -1083,6 +1108,7 @@
             return;
           }
           items.unshift({ t: new Date().toISOString(), name: name, message: message });
+          page = 0;                        /* 새 글이 보이는 첫 페이지로 */
           render();
           say('소중한 축하의 말씀, 감사히 간직하겠습니다.', 'ok');
           form.reset();
@@ -1107,6 +1133,7 @@
     initCountdown();
     initGallery();
     initVenue();
+    initVenueTabs();
     initAccount();
     initShare();
     rsvpPopup = initRsvpPopup();

@@ -184,7 +184,7 @@ def main() -> int:
         total += size
         print(f"  {dst_name:38s} {size:7,d} B  ({len(cs)}자)")
 
-    budget = 82 * 1024  # 2026-08-18 재배분 (설계 문서 §10)
+    budget = 76 * 1024  # 2026-08-18 v3 재배분 (설계 문서 §10)
     print(f"\n폰트 합계 {total:,} B / 예산 {budget:,} B "
           f"({'OK' if total <= budget else '초과!'})")
     return 0 if total <= budget else 1
